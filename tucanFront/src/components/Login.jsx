@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { login } from "../services/authService"; // Asegúrate de que la ruta sea correcta
 
 const Login = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState("");
@@ -8,15 +10,14 @@ const Login = ({ onLoginSuccess }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-
     try {
       await login(email, password);
-
       onLoginSuccess();
     } catch (err) {
       setError("Credenciales incorrectas");
     }
   };
+
   return (
     <div
       className="vh-100 vw-100 d-flex align-items-center justify-content-center"
@@ -50,22 +51,18 @@ const Login = ({ onLoginSuccess }) => {
 
               <form onSubmit={handleLogin}>
                 <div className="mb-3">
-                  <label
-                    className="form-label"
-                    type="text"
-                    id="email"
-                    name="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  >
+                  <label htmlFor="email" className="form-label">
                     Correo
                   </label>
                   <input
                     type="email"
                     className="form-control"
                     id="email"
+                    name="email"
+                    value={email} // Vinculado al estado
+                    onChange={(e) => setEmail(e.target.value)} // Actualiza el estado
                     placeholder="Ingresa tu correo"
+                    required
                   />
                 </div>
 
@@ -78,9 +75,10 @@ const Login = ({ onLoginSuccess }) => {
                     type="password"
                     id="password"
                     name="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={password} // Vinculado al estado
+                    onChange={(e) => setPassword(e.target.value)} // Actualiza el estado
                     placeholder="Ingresa tu contraseña"
+                    required
                   />
                 </div>
 
@@ -91,7 +89,10 @@ const Login = ({ onLoginSuccess }) => {
                 </div>
 
                 <p className="text-center">
-                  ¿No tienes una cuenta? <a href="#">Regístrate</a>
+                  ¿Olvidaste tu contraseña?{" "}
+                  <Link to="/reset-password" className="forgot-password-link">
+                    Recuperar contraseña
+                  </Link>
                 </p>
               </form>
             </div>
