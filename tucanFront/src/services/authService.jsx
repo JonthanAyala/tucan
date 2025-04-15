@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {API_URL} from '../config/ip.js'; // Asegúrate de que la ruta sea correcta
+import { API_URL } from '../config/url';
 
 // Función para iniciar sesión
 export const login = async (email, password) => {
@@ -9,6 +9,7 @@ export const login = async (email, password) => {
         if (response.data.access) {
             localStorage.setItem("accessToken", response.data.access);
             localStorage.setItem("refreshToken", response.data.refresh);
+            localStorage.setItem("id", response.data.id); // Guardar el rol del usuario
         }
         return response.data;
     } catch (error) {

@@ -7,6 +7,7 @@ const Sidebar = ({ onSelectComponent, activeComponent }) => {
   const [collapsed, setCollapsed] = useState(false);
 
   const menuItems = [
+    { name: 'Usuarios', component: 'Usuarios', icon: null },
     // { name: 'Clientes', component: 'Clientes', icon: user },
     // { name: 'Contratos', component: 'Contratos', icon: contract },
   ];
