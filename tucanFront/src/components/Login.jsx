@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import { login } from "../services/authService";
+import { useEffect } from "react";
+
 
 const Login = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState("");
@@ -102,12 +104,12 @@ const Login = ({ onLoginSuccess }) => {
                     Ingresar
                   </button>
                 </div>
-
                 <p className="text-center mb-0">
-                  ¿Olvidaste tu contraseña?{" "}
-                  <Link to="/reset-password" className="text-decoration-none text-primary">
-                    Recuperar acceso
+                  ¿No tienes una cuenta?{" "}
+                  <Link to="/register" className="text-decoration-none" style={{ color: "#00ffe0" }}>
+                    Regístrate
                   </Link>
+
                 </p>
               </form>
             </div>
