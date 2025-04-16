@@ -1,148 +1,143 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 import apiClient, { peticion } from "../../config/apiClient";
+
+const MySwal = withReactContent(Swal);
 
 const Deportes = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [currentData, setCurrentData] = useState(null);
-  const currentUserId = localStorage.getItem("id");
+  const [currentData, setCurrentData] = useState({ deporte: {} });
   const navi = useNavigate();
   const prefijo = "/config_deporte/api/";
 
   const fetchData = async () => {
-    peticion(apiClient, prefijo)
-    .then((res) => {
+    try {
+      const res = await peticion(apiClient, prefijo);
       setData(res.data);
-      setLoading(false);
-    })
-    .catch((error) => {
+    } catch (error) {
       console.error("Error al cargar los datos:", error);
+      MySwal.fire("Error", "No se pudieron cargar los deportes.", "error");
+    } finally {
       setLoading(false);
-    });
-}
+    }
+  };
 
   useEffect(() => {
     fetchData();
   }, []);
 
   const handleEdit = (editar) => {
-    setCurrentData(editar);
+    setCurrentData({ ...editar });
     setShowModal(true);
   };
 
   const handleCreate = () => {
-    setCurrentData({});
+    setCurrentData({ deporte: {}, max_titulares: "", max_suplentes: "" });
     setShowModal(true);
   };
 
-  const handleDelete = (id) => {
-    if (!window.confirm("¿Estás seguro de que deseas eliminar este equipo?"))
-      return;
+  const handleDelete = async (id) => {
+    const result = await MySwal.fire({
+      title: "¿Estás seguro?",
+      text: "¡No podrás revertir esto!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    });
 
-    peticion(apiClient, `${prefijo}${id}/`, "delete")
-      .then(() => {
-        setData(data.filter((datamap) => datamap.deporte.id !== id));
-        alert("Equipo eliminado con éxito.");
-      })
-      .catch((error) => {
+    if (result.isConfirmed) {
+      try {
+        await peticion(apiClient, `${prefijo}${id}/`, "delete");
+        setData(data.filter((d) => d.deporte.id !== id));
+        MySwal.fire("Eliminado", "El deporte ha sido eliminado.", "success");
+      } catch (error) {
         console.error("Error al eliminar el equipo:", error);
-        alert("Ocurrió un error al eliminar el equipo.");
-      });
+        MySwal.fire("Error", "Ocurrió un error al eliminar el deporte.", "error");
+      }
+    }
   };
 
-  const handleSave = () => {
-    console.log("currentData", currentData);
-    if (currentData.deporte.id) {
-      peticion(apiClient, `${prefijo}${currentData.deporte.id}/`, "put", currentData)
-        .then((res) => {
-          setData(
-            data.map((datamap) =>
-                datamap.deporte.id === currentData.deporte.id ? res.data : datamap
+  const handleSave = async () => {
+    const payload = {
+      ...currentData,
+      deporte: {
+        ...currentData.deporte,
+      },
+    };
+
+    const isEdit = !!currentData.deporte?.id;
+
+    try {
+      const res = isEdit
+        ? await peticion(apiClient, `${prefijo}${currentData.deporte.id}/`, "put", payload)
+        : await peticion(apiClient, prefijo, "post", payload);
+
+      setData((prevData) =>
+        isEdit
+          ? prevData.map((d) =>
+              d.deporte.id === res.data.deporte.id ? res.data : d
             )
-          );
-          setShowModal(false);
-          alert("Equipo actualizado con éxito.");
-        })
-        .catch((error) => {
-          console.error("Error al actualizar el equipo:", error);
-          alert("Ocurrió un error al actualizar el equipo.");
-        });
-    } else {
-      peticion(apiClient, prefijo, "post", currentData)
-        .then((res) => {
-          setData([...data, res.data]);
-          setShowModal(false);
-          alert("Equipo creado con éxito.");
-        })
-        .catch((error) => {
-          console.error("Error al crear el equipo:", error);
-          alert("Ocurrió un error al crear el equipo.");
-        });
+          : [...prevData, res.data]
+      );
+
+      MySwal.fire("Éxito", isEdit ? "Deporte actualizado." : "Deporte creado.", "success");
+      setShowModal(false);
+    } catch (error) {
+      console.error("Error al guardar:", error);
+      MySwal.fire("Error", "Ocurrió un error al guardar.", "error");
     }
   };
 
   return (
     <div>
-      <h3>Tabla de deportes</h3>
+      <h3 className="mb-3">Configuración de Deportes</h3>
       <button className="btn btn-success mb-3" onClick={handleCreate}>
-        <i className="bi bi-plus"></i> Crear equipo
+        <i className="bi bi-plus"></i> Crear configuración
       </button>
 
-      <div className="row">
-        {data.map((config) => (
-          <div className="col-md-4 mb-4" key={config.deporte.id}>
-            <div className="card h-100 shadow-sm">
-              <div className="card-body">
-                <h5 className="card-title">{config.deporte.nombre}</h5>
-                <p className="mb-1">
-                  <strong>Máx. Titulares:</strong> {config.max_titulares}
-                </p>
-                <p>
-                  <strong>Máx. Suplentes:</strong> {config.max_suplentes}
-                </p>
-              </div>
-              <div className="card-footer d-flex justify-content-between">
-                <button
-                  className="btn btn-success btn-sm"
-                  onClick={() => handleEdit(config)}
-                >
-                  EDITAR CONFIGURACIÓN
-                </button>
-                <button
-                  className="btn btn-danger btn-sm"
-                  onClick={() => handleDelete(config.deporte.id)}
-                >
-                  ELIMINAR CONFIGURACIÓN
-                </button>
+      {loading ? (
+        <p>Cargando deportes...</p>
+      ) : (
+        <div className="row">
+          {data.map((config) => (
+            <div className="col-md-4 mb-4" key={config.deporte.id}>
+              <div className="card h-100 shadow-sm">
+                <div className="card-body">
+                  <h5 className="card-title">{config.deporte.nombre}</h5>
+                  <p><strong>Máx. Titulares:</strong> {config.max_titulares}</p>
+                  <p><strong>Máx. Suplentes:</strong> {config.max_suplentes}</p>
+                </div>
+                <div className="card-footer d-flex justify-content-between">
+                  <button className="btn btn-success btn-sm" onClick={() => handleEdit(config)}>
+                    Editar
+                  </button>
+                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(config.deporte.id)}>
+                    Eliminar
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {showModal && (
         <div className="modal d-block" tabIndex="-1" role="dialog">
           <div className="modal-dialog" role="document">
-            <div className="modal-content">
+            <div className="modal-content shadow">
               <div className="modal-header">
-                <h5>
-                  {currentData.id
-                    ? "Editar Configuración"
-                    : "Crear Configuración"}
-                </h5>
-                <button
-                  type="button"
-                  className="close"
-                  onClick={() => setShowModal(false)}
-                >
+                <h5>{currentData.deporte.id ? "Editar Configuración" : "Crear Configuración"}</h5>
+                <button type="button" className="close" onClick={() => setShowModal(false)}>
                   <span>&times;</span>
                 </button>
               </div>
               <div className="modal-body">
                 <form>
-                  {/* Datos del deporte */}
                   <div className="form-group">
                     <label>Nombre del Deporte</label>
                     <input
@@ -152,13 +147,9 @@ const Deportes = () => {
                       onChange={(e) =>
                         setCurrentData({
                           ...currentData,
-                          deporte: {
-                            ...currentData.deporte,
-                            nombre: e.target.value,
-                          },
+                          deporte: { ...currentData.deporte, nombre: e.target.value },
                         })
                       }
-                      placeholder="Nombre del deporte"
                     />
                   </div>
                   <div className="form-group">
@@ -192,21 +183,10 @@ const Deportes = () => {
                 </form>
               </div>
               <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={handleSave}
-                >
+                <button className="btn btn-primary" onClick={handleSave}>
                   Guardar
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setShowModal(false);
-                    setCurrentData(null);
-                  }}
-                >
+                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
                   Cancelar
                 </button>
               </div>

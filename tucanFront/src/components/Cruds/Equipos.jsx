@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import apiClient, { peticion } from "../../config/apiClient";
 
 const Equipos = () => {
@@ -45,23 +46,42 @@ const Equipos = () => {
   };
 
   const handleDelete = (id) => {
-    if (!window.confirm("¿Estás seguro de que deseas eliminar este equipo?"))
-      return;
-
-    peticion(apiClient, `${prefijo}${id}/`, "delete")
-      .then(() => {
-        setData(data.filter((equipo) => equipo.id !== id));
-        alert("Equipo eliminado con éxito.");
-      })
-      .catch((error) => {
-        console.error("Error al eliminar el equipo:", error);
-        alert("Ocurrió un error al eliminar el equipo.");
-      });
+    Swal.fire({
+      title: "¿Estás seguro?",
+      text: "Esta acción eliminará el equipo.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sí, eliminar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        peticion(apiClient, `${prefijo}${id}/`, "delete")
+          .then(() => {
+            setData(data.filter((equipo) => equipo.id !== id));
+            Swal.fire("Eliminado", "Equipo eliminado con éxito.", "success");
+          })
+          .catch((error) => {
+            console.error("Error al eliminar el equipo:", error);
+            Swal.fire("Error", "Ocurrió un error al eliminar el equipo.", "error");
+          });
+      }
+    });
   };
 
   const handleSave = () => {
+    if (!currentData.nombre || !currentData.deporte) {
+      Swal.fire("Campos incompletos", "Por favor completa nombre y deporte.", "warning");
+      return;
+    }
+
+    const datosAEnviar = {
+      ...currentData,
+      entrenador: parseInt(currentUserId, 10),
+    };
+
     if (currentData.id) {
-      peticion(apiClient, `${prefijo}${currentData.id}/`, "put", currentData)
+      peticion(apiClient, `${prefijo}${currentData.id}/`, "put", datosAEnviar)
         .then((res) => {
           setData(
             data.map((equipo) =>
@@ -69,22 +89,22 @@ const Equipos = () => {
             )
           );
           setShowModal(false);
-          alert("Equipo actualizado con éxito.");
+          Swal.fire("Actualizado", "Equipo actualizado con éxito.", "success");
         })
         .catch((error) => {
           console.error("Error al actualizar el equipo:", error);
-          alert("Ocurrió un error al actualizar el equipo.");
+          Swal.fire("Error", "Ocurrió un error al actualizar el equipo.", "error");
         });
     } else {
-      peticion(apiClient, prefijo, "post", currentData)
+      peticion(apiClient, prefijo, "post", datosAEnviar)
         .then((res) => {
           setData([...data, res.data]);
           setShowModal(false);
-          alert("Equipo creado con éxito.");
+          Swal.fire("Creado", "Equipo creado con éxito.", "success");
         })
         .catch((error) => {
           console.error("Error al crear el equipo:", error);
-          alert("Ocurrió un error al crear el equipo.");
+          Swal.fire("Error", "Ocurrió un error al crear el equipo.", "error");
         });
     }
   };
@@ -197,15 +217,11 @@ const Equipos = () => {
                       onChange={handleInputChange}
                     />
                   </div>
-                  <div className="form-group">
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="entrenador"
-                      value={currentUserId}
-                      hidden
-                    />
-                  </div>
+                  <input
+                    type="hidden"
+                    name="entrenador"
+                    value={currentUserId}
+                  />
                   <div className="form-group">
                     <label>Deporte</label>
                     <select
