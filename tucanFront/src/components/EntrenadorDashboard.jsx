@@ -25,7 +25,7 @@ function Prueba() {
         <Sidebar
           onSelectComponent={setActiveComponent} 
           activeComponent={activeComponent}
-          menuItems={menuItems}
+          menuItems={menuItems} 
         />
         
         <div className="flex-grow-1 p-3 overflow-auto">

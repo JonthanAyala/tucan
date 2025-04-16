@@ -1,11 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { login } from "../services/authService"; // Asegúrate de que la ruta sea correcta
 
-const Login = ({ onLoginSuccess }) => {
+<p className="text-center">
+  ¿Ya tienes cuenta?{" "}
+  <Link to="/" className="text-decoration-none" style={{ color: "#00ffe0" }}>
+    Inicia sesión
+  </Link>
+</p>
+
+const Register = ({ onRegisterSuccess }) => {
+  const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
+  const [telefono, setTelefono] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmar, setConfirmar] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     const link = document.createElement("link");
@@ -14,14 +24,22 @@ const Login = ({ onLoginSuccess }) => {
     document.head.appendChild(link);
   }, []);
 
-  const handleLogin = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
+
+    if (password !== confirmar) {
+      return setError("Las contraseñas no coinciden");
+    }
+
     try {
-      await login(email, password);
-      onLoginSuccess();
+      // Simulación de registro
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setSuccess("¡Registro exitoso!");
+      onRegisterSuccess?.();
     } catch (err) {
-      setError("Credenciales incorrectas");
+      setError("Ocurrió un error al registrar");
     }
   };
 
@@ -40,10 +58,10 @@ const Login = ({ onLoginSuccess }) => {
           <div className="col-md-6 d-flex align-items-center justify-content-center text-center">
             <div>
               <h1 className="fw-bold display-5" style={{ textShadow: "0 0 10px #00ffe0" }}>
-                ¡Inicia sesión <br /> como un <span style={{ color: "#00ffe0" }}>Entrenador</span>!
+                ¡Regístrate <br /> como un <span style={{ color: "#00ffe0" }}>Entrenador</span>!
               </h1>
               <p className="lead mt-3" style={{ opacity: 0.8 }}>
-                Tu equipo te espera ⚡
+                Tu aventura está por comenzar ✨
               </p>
             </div>
           </div>
@@ -67,7 +85,23 @@ const Login = ({ onLoginSuccess }) => {
                 />
               </div>
 
-              <form onSubmit={handleLogin}>
+              <form onSubmit={handleRegister}>
+                <div className="mb-3">
+                  <label htmlFor="nombre" className="form-label fw-semibold">
+                    Nombre
+                  </label>
+                  <input
+                    type="text"
+                    id="nombre"
+                    className="form-control bg-dark text-white border-secondary"
+                    placeholder="Ash Ketchum"
+                    value={nombre}
+                    onChange={(e) => setNombre(e.target.value)}
+                    required
+                    style={{ borderRadius: "8px" }}
+                  />
+                </div>
+
                 <div className="mb-3">
                   <label htmlFor="email" className="form-label fw-semibold">
                     Correo
@@ -85,6 +119,29 @@ const Login = ({ onLoginSuccess }) => {
                 </div>
 
                 <div className="mb-3">
+                <label htmlFor="telefono" className="form-label fw-semibold">
+                    Teléfono
+                </label>
+                <input
+                    type="tel"
+                    id="telefono"
+                    className="form-control bg-dark text-white border-secondary"
+                    placeholder="7773678144"
+                    value={telefono}
+                    onChange={(e) => {
+                    // Solo números: elimina letras y signos
+                    const valor = e.target.value.replace(/\D/g, "");
+                    setTelefono(valor);
+                    }}
+                    required
+                    style={{ borderRadius: "8px" }}
+                    pattern="[0-9]{10}" // opcional, si quieres validar por HTML5 10 dígitos
+                    maxLength={10} // opcional, máximo 10 caracteres
+                />
+                </div>
+
+
+                <div className="mb-3">
                   <label htmlFor="password" className="form-label fw-semibold">
                     Contraseña
                   </label>
@@ -100,10 +157,28 @@ const Login = ({ onLoginSuccess }) => {
                   />
                 </div>
 
+                <div className="mb-3">
+                  <label htmlFor="confirmar" className="form-label fw-semibold">
+                    Confirmar contraseña
+                  </label>
+                  <input
+                    type="password"
+                    id="confirmar"
+                    className="form-control bg-dark text-white border-secondary"
+                    placeholder="********"
+                    value={confirmar}
+                    onChange={(e) => setConfirmar(e.target.value)}
+                    required
+                    style={{ borderRadius: "8px" }}
+                  />
+                </div>
+
                 {error && (
-                  <div className="alert alert-danger text-center py-2">
-                    {error}
-                  </div>
+                  <div className="alert alert-danger text-center py-2">{error}</div>
+                )}
+
+                {success && (
+                  <div className="alert alert-success text-center py-2">{success}</div>
                 )}
 
                 <div className="d-grid mb-3">
@@ -125,20 +200,15 @@ const Login = ({ onLoginSuccess }) => {
                       e.currentTarget.style.backgroundColor = "#00ffe0";
                     }}
                   >
-                    Ingresar
+                    Registrarme
                   </button>
                 </div>
 
                 <p className="text-center">
-                  ¿No tienes una cuenta?{" "}
-                  <Link to="/register" className="text-decoration-none" style={{ color: "#00ffe0" }}>
-                    Regístrate
-                  </Link>
-                </p>
-                  ¿Olvidaste tu contraseña?{" "}
-                  <Link to="/reset-password" className="forgot-password-link">
-                    Recuperar contraseña
-                  </Link>
+                ¿Ya tienes cuenta?{" "}
+                <Link to="/" className="text-decoration-none" style={{ color: "#00ffe0" }}>
+                    Inicia sesión
+                </Link>
                 </p>
               </form>
             </div>
@@ -149,4 +219,4 @@ const Login = ({ onLoginSuccess }) => {
   );
 };
 
-export default Login;
+export default Register;
