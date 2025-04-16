@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { login } from "../services/authService"; // Asegúrate de que la ruta sea correcta
+import { login } from "../services/authService";
+import { useEffect } from "react";
+ // Asegúrate de que la ruta sea correcta
 
 const Login = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState("");
@@ -134,7 +136,6 @@ const Login = ({ onLoginSuccess }) => {
                   <Link to="/register" className="text-decoration-none" style={{ color: "#00ffe0" }}>
                     Regístrate
                   </Link>
-                </p>
                   ¿Olvidaste tu contraseña?{" "}
                   <Link to="/reset-password" className="forgot-password-link">
                     Recuperar contraseña
