@@ -105,11 +105,10 @@ const Login = ({ onLoginSuccess }) => {
                   </button>
                 </div>
                 <p className="text-center mb-0">
-                  ¿No tienes una cuenta?{" "}
-                  <Link to="/register" className="text-decoration-none" style={{ color: "#00ffe0" }}>
-                    Regístrate
+                  ¿Olvidaste tu contraseña?{" "}
+                  <Link to="/reset-password" className="text-decoration-none text-primary">
+                    Recuperar acceso
                   </Link>
-
                 </p>
               </form>
             </div>
