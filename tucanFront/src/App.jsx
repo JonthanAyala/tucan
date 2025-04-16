@@ -10,6 +10,8 @@ import EntrenadorDashboard from "./components/EntrenadorDashboard";
 import DuenoDashboard from "./components/DuenoDashboard";
 import { logout } from "./services/authService";
 import NavBar from "./components/NavBar";
+import NotFound from "./pages/404";
+import Error500 from "./pages/500";
 
 const ProtectedRoute = ({ isLoggedIn, userRole, allowedRoles, children }) => {
   const location = useLocation();
@@ -106,7 +108,9 @@ function App() {
       <Route path="/" element={<Index />} />
 
       <Route path="/acceso-denegado" element={<Unauthorized />} />
-
+      <Route path="/error-500" element={<Error500 />} />
+      <Route path="*" element={<NotFound />} />
+  
       <Route
         path="/login"
         element={
