@@ -10,10 +10,12 @@ import EntrenadorDashboard from "./components/EntrenadorDashboard";
 import DuenoDashboard from "./components/DuenoDashboard";
 import { logout } from "./services/authService";
 import NavBar from "./components/NavBar";
+// IsaiYIYI
 import NotFound from "./pages/404";
 import ServerError from "./pages/500";
 import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
+
 
 const ProtectedRoute = ({ isLoggedIn, userRole, allowedRoles, children }) => {
   const location = useLocation();
@@ -110,10 +112,12 @@ function App() {
       <Route path="/" element={<Index />} />
 
       <Route path="/acceso-denegado" element={<Unauthorized />} />
+      // IsaiYIYI
       <Route path="*" element={<NotFound />} />
       <Route path="/500" element={<ServerError />} />
       <Route path="/register" element={<Register />} />
       <Route path="/dashboard" element={<Dashboard />} />
+
       <Route
         path="/login"
         element={
@@ -165,7 +169,10 @@ function App() {
             userRole={userRole}
             allowedRoles={["entrenador"]}
           >
-            <EntrenadorDashboard />
+            <div className="vh-100 d-flex flex-column">
+              <NavBar handleLogout={handleLogout} />
+              <EntrenadorDashboard />
+            </div>
           </ProtectedRoute>
         }
       />

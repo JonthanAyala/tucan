@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-
+import { login } from "../services/authService"; // Asegúrate de que la ruta sea correcta
 
 const Login = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState("");
@@ -17,7 +17,6 @@ const Login = ({ onLoginSuccess }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-
     try {
       await login(email, password);
       onLoginSuccess();
@@ -136,10 +135,9 @@ const Login = ({ onLoginSuccess }) => {
                     Regístrate
                   </Link>
                 </p>
-                  <p className="text-center">
-                  Prueba{" "}
-                  <Link to="/dashboard" className="text-decoration-none" style={{ color: "#00ffe0" }}>
-                    Pruebita
+                  ¿Olvidaste tu contraseña?{" "}
+                  <Link to="/reset-password" className="forgot-password-link">
+                    Recuperar contraseña
                   </Link>
                 </p>
               </form>
