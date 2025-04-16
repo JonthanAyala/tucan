@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 import apiClient, { peticion } from "../../config/apiClient"; // Asegurate de que el path sea correcto
+
+const MySwal = withReactContent(Swal);
 
 const Usuarios = () => {
   const [data, setData] = useState([]);
@@ -33,58 +37,63 @@ const Usuarios = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (id == currentUserId) {
-      alert("No puedes eliminar tu propio usuario.");
+      MySwal.fire("Oops", "No puedes eliminar tu propio usuario.", "warning");
       return;
     }
-    if (!window.confirm("¿Estás seguro de que deseas eliminar este usuario?"))
-      return;
 
-    peticion(apiClient, `/usuarios/api/${id}/`, "delete")
-      .then(() => {
-        setData(data.filter((user) => user.id !== id));
-        alert("Usuario eliminado con éxito.");
-      })
-      .catch((error) => {
-        console.error("Error al eliminar el usuario:", error);
-        alert("Ocurrió un error al eliminar el usuario.");
-      });
+    const result = await MySwal.fire({
+      title: "¿Estás seguro?",
+      text: "Esta acción eliminará al usuario permanentemente.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (result.isConfirmed) {
+      peticion(apiClient, `/usuarios/api/${id}/`, "delete")
+        .then(() => {
+          setData(data.filter((user) => user.id !== id));
+          MySwal.fire("Eliminado", "Usuario eliminado con éxito.", "success");
+        })
+        .catch(() => {
+          MySwal.fire("Error", "No se pudo eliminar el usuario.", "error");
+        });
+    }
   };
 
   const handleSave = () => {
-    if (currentUser.id) {
-      // Actualización de usuario existente
-      peticion(
-        apiClient,
-        `/usuarios/api/${currentUser.id}/`,
-        "put",
-        currentUser
-      )
-        .then((res) => {
-          setData(
-            data.map((user) => (user.id === currentUser.id ? res.data : user))
-          );
-          setShowModal(false);
-          alert("Usuario actualizado con éxito.");
-        })
-        .catch((error) => {
-          console.error("Error al actualizar el usuario:", error);
-          alert("Ocurrió un error al actualizar el usuario.");
-        });
-    } else {
-      // Creación de un nuevo usuario
-      peticion(apiClient, `/usuarios/api/`, "post", currentUser)
-        .then((res) => {
-          setData([...data, res.data]);
-          setShowModal(false);
-          alert("Usuario creado con éxito.");
-        })
-        .catch((error) => {
-          console.error("Error al crear el usuario:", error);
-          alert("Ocurrió un error al crear el usuario.");
-        });
+    const esEdicion = !!currentUser.id;
+    const ruta = esEdicion
+      ? `/usuarios/api/${currentUser.id}/`
+      : `/usuarios/api/`;
+    const metodo = esEdicion ? "put" : "post";
+
+    if (!currentUser.nombre || !currentUser.email) {
+      MySwal.fire("Error", "Por favor completa los campos requeridos.", "error");
+      return;
     }
+
+    peticion(apiClient, ruta, metodo, currentUser)
+      .then((res) => {
+        if (esEdicion) {
+          setData(data.map((u) => (u.id === res.data.id ? res.data : u)));
+        } else {
+          setData([...data, res.data]);
+        }
+        setShowModal(false);
+        setCurrentUser(null);
+        MySwal.fire(
+          esEdicion ? "Actualizado" : "Creado",
+          `Usuario ${esEdicion ? "actualizado" : "creado"} con éxito.`,
+          "success"
+        );
+      })
+      .catch(() => {
+        MySwal.fire("Error", "Hubo un problema al guardar el usuario.", "error");
+      });
   };
 
   const handleInputChange = (e) => {
@@ -116,14 +125,11 @@ const Usuarios = () => {
       name: "Acciones",
       cell: (row) => (
         <span>
-          <button
-            className="btn btn-warning me-4"
-            onClick={() => handleEdit(row)}
-          >
+          <button className="btn btn-warning me-2" onClick={() => handleEdit(row)}>
             <i className="bi bi-pencil"></i>
           </button>
           <button
-            className="btn btn-danger me-4"
+            className="btn btn-danger"
             onClick={() => handleDelete(row.id)}
             disabled={row.id === currentUserId}
           >
@@ -136,35 +142,41 @@ const Usuarios = () => {
 
   return (
     <div>
-      <h3>Tabla de usuarios</h3>
-      <button className="btn btn-success mb-3" onClick={handleCreate}>
-        <i className="bi bi-plus"></i> Crear Usuario
-      </button>
-      <DataTable
-        columns={columns}
-        data={data}
-        progressPending={loading}
-        pagination
-        highlightOnHover
-        pointerOnHover
-      />
+      <h3 className="mb-4">👤 Gestión de Usuarios</h3>
+      <div className="card shadow-lg border-0 mb-4">
+        <div className="card-body">
+          <button className="btn btn-success mb-3" onClick={handleCreate}>
+            <i className="bi bi-plus-lg"></i> Crear Usuario
+          </button>
+          <DataTable
+            columns={columns}
+            data={data}
+            progressPending={loading}
+            pagination
+            highlightOnHover
+            pointerOnHover
+            noDataComponent="No hay usuarios disponibles."
+          />
+        </div>
+      </div>
+
       {showModal && (
         <div className="modal d-block" tabIndex="-1" role="dialog">
           <div className="modal-dialog" role="document">
-            <div className="modal-content">
+            <div className="modal-content rounded-4 shadow">
               <div className="modal-header">
-                {currentUser.id ? "Editar Usuario" : "Crear Usuario"}
+                <h5 className="modal-title">
+                  {currentUser.id ? "Editar Usuario" : "Crear Usuario"}
+                </h5>
                 <button
                   type="button"
-                  className="close"
+                  className="btn-close"
                   onClick={() => setShowModal(false)}
-                >
-                  <span>&times;</span>
-                </button>
+                ></button>
               </div>
               <div className="modal-body">
                 <form>
-                  <div className="form-group">
+                  <div className="form-group mb-3">
                     <label>Nombre</label>
                     <input
                       type="text"
@@ -174,7 +186,7 @@ const Usuarios = () => {
                       onChange={handleInputChange}
                     />
                   </div>
-                  <div className="form-group">
+                  <div className="form-group mb-3">
                     <label>Apellidos</label>
                     <input
                       type="text"
@@ -184,7 +196,7 @@ const Usuarios = () => {
                       onChange={handleInputChange}
                     />
                   </div>
-                  <div className="form-group">
+                  <div className="form-group mb-3">
                     <label>Email</label>
                     <input
                       type="email"
@@ -194,7 +206,7 @@ const Usuarios = () => {
                       onChange={handleInputChange}
                     />
                   </div>
-                  <div className="form-group">
+                  <div className="form-group mb-3">
                     <label>Detalles</label>
                     <textarea
                       className="form-control"
@@ -203,7 +215,7 @@ const Usuarios = () => {
                       onChange={handleInputChange}
                     />
                   </div>
-                  <div className="form-group">
+                  <div className="form-group mb-3">
                     <label>Activo</label>
                     <select
                       className="form-control"
@@ -222,30 +234,30 @@ const Usuarios = () => {
                       <option value="false">No</option>
                     </select>
                   </div>
-                  {currentUser.id ? (
-                    null
-                  ) :<>
-                  <div className="form-group">
-                    <label>Nueva Contraseña</label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      name="password"
-                      value={currentUser.password || ""}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Confirmar Contraseña</label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      name="confirmPassword"
-                      value={currentUser.confirmPassword || ""}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </>}
+                  {!currentUser.id && (
+                    <>
+                      <div className="form-group mb-3">
+                        <label>Nueva Contraseña</label>
+                        <input
+                          type="password"
+                          className="form-control"
+                          name="password"
+                          value={currentUser.password || ""}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="form-group mb-3">
+                        <label>Confirmar Contraseña</label>
+                        <input
+                          type="password"
+                          className="form-control"
+                          name="confirmPassword"
+                          value={currentUser.confirmPassword || ""}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                    </>
+                  )}
                 </form>
               </div>
               <div className="modal-footer">
