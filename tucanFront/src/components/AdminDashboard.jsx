@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Sidebar from "./Sidebar";
 import Usuarios from "./Cruds/Usuarios";
+// import Eventos from "./Cruds/Eventos";
 
 
 function AdminDashboard() {
@@ -9,20 +10,21 @@ function AdminDashboard() {
   const renderComponent = () => {
     switch(activeComponent) {
       case 'Usuarios': return <Usuarios />;
-    //   case 'Clientes': return <Clientes />;
-    //   case 'Contratos': return <Contratos />;
-    //   case 'Paquetes': return <Paquetes />;
-    //   case 'Categorias': return <Categorias />;
-    //   case 'Canales': return <Canales />;
-    //   default: return <Clientes />;
+      // case 'Eventos' : return <Eventos />;
     }
   };
-
+  const menuItems = [
+    { name: 'Usuarios', component: 'Usuarios', icon: null },
+    // { name: 'Equipos', component: 'Equipos', icon: null },
+    // { name: 'Entrenadores', component: 'Entrenadores', icon: null },
+    // { name: 'Jugadores', component: 'Jugadores', icon: null },
+  ];
   return (
       <div className="d-flex flex-grow-1 overflow-hidden">
-        <Sidebar 
+        <Sidebar
           onSelectComponent={setActiveComponent} 
           activeComponent={activeComponent}
+          menuItems={menuItems}
         />
         
         <div className="flex-grow-1 p-3 overflow-auto">

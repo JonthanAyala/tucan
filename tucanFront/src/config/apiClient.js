@@ -35,9 +35,9 @@ const makeRequest = (method, complemento, data) => {
 
 export const peticion = async (apiClient, complemento, method = 'get', data = null) => {
     const refreshToken = localStorage.getItem('refreshToken');
-
     try {
-        return await makeRequest(method, complemento, data);
+        const response = await makeRequest(method, complemento, data);
+        return response;
     } catch (error) {
         if (error.response?.status === 401 && refreshToken) {
             try {

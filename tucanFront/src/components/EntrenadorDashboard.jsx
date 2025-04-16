@@ -1,37 +1,37 @@
 import { useState } from 'react';
 import NavBar from "./NavBar";
 import Sidebar from "./Sidebar";
-
+import Equipos from "./Cruds/Equipos";
 
 function Prueba() {
   const [activeComponent, setActiveComponent] = useState('');
 
   const renderComponent = () => {
     switch(activeComponent) {
-    //   case 'Clientes': return <Clientes />;
-    //   case 'Contratos': return <Contratos />;
-    //   case 'Paquetes': return <Paquetes />;
-    //   case 'Categorias': return <Categorias />;
-    //   case 'Canales': return <Canales />;
-    //   default: return <Clientes />;
+      case 'Equipos': return <Equipos />;
+      default: return <div className="text-center"><h2>Selecciona una opción del menú</h2></div>;
     }
   };
 
-  return (
-    <div className="vh-100 d-flex flex-column">
-      <NavBar />
+  const menuItems = [
+    // { name: 'Usuarios', component: 'Usuarios', icon: null },
+    { name: 'Equipos', component: 'Equipos', icon: null },
+    // { name: 'Entrenadores', component: 'Entrenadores', icon: null },
+    // { name: 'Jugadores', component: 'Jugadores', icon: null },
+  ];
 
+  return (
       <div className="d-flex flex-grow-1 overflow-hidden">
-        <Sidebar 
+        <Sidebar
           onSelectComponent={setActiveComponent} 
           activeComponent={activeComponent}
+          menuItems={menuItems}
         />
         
         <div className="flex-grow-1 p-3 overflow-auto">
           {renderComponent()}
         </div>
       </div>
-    </div>
   );
 }
 

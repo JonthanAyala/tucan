@@ -3,14 +3,8 @@ import React, { useState } from 'react';
 // import contract from '../assets/contract.svg';
 
 
-const Sidebar = ({ onSelectComponent, activeComponent }) => {
+const Sidebar = ({ onSelectComponent, activeComponent, menuItems }) => {
   const [collapsed, setCollapsed] = useState(false);
-
-  const menuItems = [
-    { name: 'Usuarios', component: 'Usuarios', icon: null },
-    // { name: 'Clientes', component: 'Clientes', icon: user },
-    // { name: 'Contratos', component: 'Contratos', icon: contract },
-  ];
 
   const toggleSidebar = () => setCollapsed(!collapsed);
 

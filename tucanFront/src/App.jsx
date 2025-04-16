@@ -158,7 +158,10 @@ function App() {
             userRole={userRole}
             allowedRoles={["entrenador"]}
           >
-            <EntrenadorDashboard />
+            <div className="vh-100 d-flex flex-column">
+              <NavBar handleLogout={handleLogout} />
+              <EntrenadorDashboard />
+            </div>
           </ProtectedRoute>
         }
       />

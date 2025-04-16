@@ -54,35 +54,38 @@ const Usuarios = () => {
 
   const handleSave = () => {
     if (currentUser.id) {
-        // Actualización de usuario existente
-        peticion(apiClient, `/usuarios/api/${currentUser.id}/`, "put", currentUser)
-          .then((res) => {
-            setData(
-              data.map((user) =>
-                user.id === currentUser.id ? res.data : user
-              )
-            );
-            setShowModal(false);
-            alert("Usuario actualizado con éxito.");
-          })
-          .catch((error) => {
-            console.error("Error al actualizar el usuario:", error);
-            alert("Ocurrió un error al actualizar el usuario.");
-          });
-      } else {
-        // Creación de un nuevo usuario
-        peticion(apiClient, `/usuarios/api/`, "post", currentUser)
-          .then((res) => {
-            setData([...data, res.data]);
-            setShowModal(false);
-            alert("Usuario creado con éxito.");
-          })
-          .catch((error) => {
-            console.error("Error al crear el usuario:", error);
-            alert("Ocurrió un error al crear el usuario.");
-          });
-      }
-    };
+      // Actualización de usuario existente
+      peticion(
+        apiClient,
+        `/usuarios/api/${currentUser.id}/`,
+        "put",
+        currentUser
+      )
+        .then((res) => {
+          setData(
+            data.map((user) => (user.id === currentUser.id ? res.data : user))
+          );
+          setShowModal(false);
+          alert("Usuario actualizado con éxito.");
+        })
+        .catch((error) => {
+          console.error("Error al actualizar el usuario:", error);
+          alert("Ocurrió un error al actualizar el usuario.");
+        });
+    } else {
+      // Creación de un nuevo usuario
+      peticion(apiClient, `/usuarios/api/`, "post", currentUser)
+        .then((res) => {
+          setData([...data, res.data]);
+          setShowModal(false);
+          alert("Usuario creado con éxito.");
+        })
+        .catch((error) => {
+          console.error("Error al crear el usuario:", error);
+          alert("Ocurrió un error al crear el usuario.");
+        });
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -135,8 +138,8 @@ const Usuarios = () => {
     <div>
       <h3>Tabla de usuarios</h3>
       <button className="btn btn-success mb-3" onClick={handleCreate}>
-      <i className="bi bi-plus"></i> Crear Usuario
-    </button>
+        <i className="bi bi-plus"></i> Crear Usuario
+      </button>
       <DataTable
         columns={columns}
         data={data}
@@ -219,7 +222,30 @@ const Usuarios = () => {
                       <option value="false">No</option>
                     </select>
                   </div>
-                  {currentUser.id ? "Editar Usuario" : "Crear Usuario"}
+                  {currentUser.id ? (
+                    null
+                  ) :<>
+                  <div className="form-group">
+                    <label>Nueva Contraseña</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      name="password"
+                      value={currentUser.password || ""}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Confirmar Contraseña</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      name="confirmPassword"
+                      value={currentUser.confirmPassword || ""}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </>}
                 </form>
               </div>
               <div className="modal-footer">
@@ -233,7 +259,10 @@ const Usuarios = () => {
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={() => {setShowModal(false); setCurrentUser(null);}}
+                  onClick={() => {
+                    setShowModal(false);
+                    setCurrentUser(null);
+                  }}
                 >
                   Cancelar
                 </button>
