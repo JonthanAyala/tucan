@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Sidebar from "./Sidebar";
 import Usuarios from "./Cruds/Usuarios";
+import Deportes from "./Cruds/Deportes";
 // import Eventos from "./Cruds/Eventos";
 
 
@@ -10,11 +11,13 @@ function AdminDashboard() {
   const renderComponent = () => {
     switch(activeComponent) {
       case 'Usuarios': return <Usuarios />;
+      case 'Deportes': return <Deportes />;
       // case 'Eventos' : return <Eventos />;
     }
   };
   const menuItems = [
     { name: 'Usuarios', component: 'Usuarios', icon: null },
+    { name: 'Deportes', component: 'Deportes', icon: null },
     // { name: 'Equipos', component: 'Equipos', icon: null },
     // { name: 'Entrenadores', component: 'Entrenadores', icon: null },
     // { name: 'Jugadores', component: 'Jugadores', icon: null },

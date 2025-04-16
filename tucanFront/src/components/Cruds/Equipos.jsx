@@ -8,14 +8,25 @@ const Equipos = () => {
   const [showModal, setShowModal] = useState(false);
   const [currentData, setCurrentData] = useState(null);
   const currentUserId = localStorage.getItem("id");
+  const [deportes, setDeportes] = useState([]);
   const navi = useNavigate();
   const prefijo = "/equipos/api/";
+
+  const loadDeportes = async () => {
+    try {
+      const response = await peticion(apiClient, "/deportes/api/");
+      setDeportes(response.data);
+    } catch (error) {
+      console.error("Error al cargar los deportes:", error);
+    }
+  };
 
   useEffect(() => {
     peticion(apiClient, prefijo)
       .then((res) => {
         setData(res.data);
         setLoading(false);
+        loadDeportes();
       })
       .catch((error) => {
         console.error("Error al cargar los datos:", error);
@@ -197,13 +208,19 @@ const Equipos = () => {
                   </div>
                   <div className="form-group">
                     <label>Deporte</label>
-                    <input
-                      type="number"
+                    <select
                       className="form-control"
                       name="deporte"
                       value={currentData.deporte || ""}
                       onChange={handleInputChange}
-                    />
+                    >
+                      <option value="">Selecciona un deporte</option>
+                      {deportes.map((deporte) => (
+                        <option key={deporte.id} value={deporte.id}>
+                          {deporte.nombre}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="form-group">
                     <label>Número de Titulares</label>
