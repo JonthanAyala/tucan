@@ -57,8 +57,8 @@ const EquipoDetalle = ({ id }) => {
   }
 
   return (
-    <div className="container py-4">
-      <div className="card shadow-sm mb-4">
+    <div className="container row py-4">
+      <div className="card col-6 p-5 shadow-sm mb-4">
         <div className="card-header bg-light">
           <h4 className="text-center">Información General Del Equipo</h4>
         </div>
@@ -93,7 +93,7 @@ const EquipoDetalle = ({ id }) => {
         </div>
       </div>
 
-      <div className="card shadow-sm">
+      <div className="card col-6 p-5 shadow-sm">
         <div className="card-header bg-light">
           <h4 className="text-center">Jugadores</h4>
         </div>
