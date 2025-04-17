@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import apiClient, { peticion } from "../../config/apiClient";
 
-const Equipos = () => {
+const Equipos = ({onNavigate}) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -12,6 +12,9 @@ const Equipos = () => {
   const [deportes, setDeportes] = useState([]);
   const navi = useNavigate();
   const prefijo = "/equipos/api/";
+  const handleViewDetails = (equipo) => {
+    onNavigate('EquipoDetalle', { id: equipo.id });
+  };
 
   const loadDeportes = async () => {
     try {
@@ -153,10 +156,10 @@ const Equipos = () => {
               </div>
               <div className="card-footer d-flex justify-content-between">
                 <button
-                  className="btn btn-success btn-sm"
-                  onClick={() => handleEdit(equipo)}
+                  className="btn btn-primary btn-sm"
+                  onClick={() => handleViewDetails(equipo)}
                 >
-                  EDITAR EQUIPO
+                  VER INFORMACIÖN
                 </button>
                 <button
                   className="btn btn-danger btn-sm"
