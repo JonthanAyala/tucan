@@ -106,8 +106,8 @@ const Login = ({ onLoginSuccess }) => {
                 </div>
                 <p className="text-center mb-0">
                   ¿Olvidaste tu contraseña?{" "}
-                  <Link to="/reset-password" className="text-decoration-none text-primary">
-                    Recuperar acceso
+                  <Link className="" to="/recuperar">
+                    Recuperar contraseña
                   </Link>
                 </p>
               </form>
