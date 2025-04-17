@@ -72,7 +72,11 @@ const Usuarios = () => {
     const metodo = esEdicion ? "put" : "post";
 
     if (!currentUser.nombre || !currentUser.email) {
-      MySwal.fire("Error", "Por favor completa los campos requeridos.", "error");
+      MySwal.fire(
+        "Error",
+        "Por favor completa los campos requeridos.",
+        "error"
+      );
       return;
     }
 
@@ -92,7 +96,11 @@ const Usuarios = () => {
         );
       })
       .catch(() => {
-        MySwal.fire("Error", "Hubo un problema al guardar el usuario.", "error");
+        MySwal.fire(
+          "Error",
+          "Hubo un problema al guardar el usuario.",
+          "error"
+        );
       });
   };
 
@@ -125,7 +133,10 @@ const Usuarios = () => {
       name: "Acciones",
       cell: (row) => (
         <span>
-          <button className="btn btn-warning me-2" onClick={() => handleEdit(row)}>
+          <button
+            className="btn btn-warning me-2"
+            onClick={() => handleEdit(row)}
+          >
             <i className="bi bi-pencil"></i>
           </button>
           <button
@@ -197,6 +208,16 @@ const Usuarios = () => {
                     />
                   </div>
                   <div className="form-group mb-3">
+                    <label>Username</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="username"
+                      value={currentUser.username || ""}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="form-group mb-3">
                     <label>Email</label>
                     <input
                       type="email"
@@ -205,34 +226,19 @@ const Usuarios = () => {
                       value={currentUser.email || ""}
                       onChange={handleInputChange}
                     />
-                  </div>
-                  <div className="form-group mb-3">
-                    <label>Detalles</label>
-                    <textarea
-                      className="form-control"
-                      name="detalles"
-                      value={currentUser.detalles || ""}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  <div className="form-group mb-3">
-                    <label>Activo</label>
-                    <select
-                      className="form-control"
-                      name="is_active"
-                      value={currentUser.is_active ? "true" : "false"}
-                      onChange={(e) =>
-                        handleInputChange({
-                          target: {
-                            name: "is_active",
-                            value: e.target.value === "true",
-                          },
-                        })
-                      }
-                    >
-                      <option value="true">Sí</option>
-                      <option value="false">No</option>
-                    </select>
+                    <div className="form-group mb-3">
+                      <label>Rol</label>
+                      <select
+                        className="form-control"
+                        name="rol"
+                        value={currentUser.rol || ""}
+                        onChange={handleInputChange}
+                      >
+                        <option value="">Selecciona un rol</option>
+                        <option value="admin">Administrador</option>
+                        <option value="entrenador">Entrenador</option>
+                      </select>
+                    </div>
                   </div>
                   {!currentUser.id && (
                     <>

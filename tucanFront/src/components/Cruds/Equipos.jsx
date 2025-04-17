@@ -66,7 +66,11 @@ const Equipos = () => {
           })
           .catch((error) => {
             console.error("Error al eliminar el equipo:", error);
-            Swal.fire("Error", "Ocurrió un error al eliminar el equipo.", "error");
+            Swal.fire(
+              "Error",
+              "Ocurrió un error al eliminar el equipo.",
+              "error"
+            );
           });
       }
     });
@@ -74,10 +78,13 @@ const Equipos = () => {
 
   const handleSave = () => {
     if (!currentData.nombre || !currentData.deporte) {
-      Swal.fire("Campos incompletos", "Por favor completa nombre y deporte.", "warning");
+      Swal.fire(
+        "Campos incompletos",
+        "Por favor completa nombre y deporte.",
+        "warning"
+      );
       return;
     }
-
     const formData = new FormData();
     formData.append("nombre", currentData.nombre);
     formData.append("descripcion", currentData.descripcion || "");
@@ -106,7 +113,11 @@ const Equipos = () => {
         })
         .catch((error) => {
           console.error("Error al actualizar el equipo:", error);
-          Swal.fire("Error", "Ocurrió un error al actualizar el equipo.", "error");
+          Swal.fire(
+            "Error",
+            "Ocurrió un error al actualizar el equipo.",
+            "error"
+          );
         });
     } else {
       peticion(apiClient, prefijo, "post", formData, headers)
@@ -243,6 +254,12 @@ const Equipos = () => {
                       onChange={handleInputChange}
                     />
                   </div>
+                  <input
+                    type="hidden"
+                    name="entrenador"
+                    value={currentUserId || ""}
+                    onChange={handleInputChange}
+                  />
                   <div className="form-group">
                     <label>Deporte</label>
                     <select
