@@ -63,7 +63,11 @@ const Equipos = () => {
           })
           .catch((error) => {
             console.error("Error al eliminar el equipo:", error);
-            Swal.fire("Error", "Ocurrió un error al eliminar el equipo.", "error");
+            Swal.fire(
+              "Error",
+              "Ocurrió un error al eliminar el equipo.",
+              "error"
+            );
           });
       }
     });
@@ -71,17 +75,17 @@ const Equipos = () => {
 
   const handleSave = () => {
     if (!currentData.nombre || !currentData.deporte) {
-      Swal.fire("Campos incompletos", "Por favor completa nombre y deporte.", "warning");
+      Swal.fire(
+        "Campos incompletos",
+        "Por favor completa nombre y deporte.",
+        "warning"
+      );
       return;
     }
-
-    const datosAEnviar = {
-      ...currentData,
-      entrenador: parseInt(currentUserId, 10),
-    };
+    const dataToSave = { ...currentData, entrenador: currentUserId };
 
     if (currentData.id) {
-      peticion(apiClient, `${prefijo}${currentData.id}/`, "put", datosAEnviar)
+      peticion(apiClient, `${prefijo}${currentData.id}/`, "put", dataToSave)
         .then((res) => {
           setData(
             data.map((equipo) =>
@@ -93,10 +97,14 @@ const Equipos = () => {
         })
         .catch((error) => {
           console.error("Error al actualizar el equipo:", error);
-          Swal.fire("Error", "Ocurrió un error al actualizar el equipo.", "error");
+          Swal.fire(
+            "Error",
+            "Ocurrió un error al actualizar el equipo.",
+            "error"
+          );
         });
     } else {
-      peticion(apiClient, prefijo, "post", datosAEnviar)
+      peticion(apiClient, prefijo, "post", dataToSave)
         .then((res) => {
           setData([...data, res.data]);
           setShowModal(false);
@@ -126,9 +134,10 @@ const Equipos = () => {
           <div className="col-md-4 mb-4" key={equipo.id}>
             <div className="card h-100 shadow-sm">
               <img
-                src={equipo.imagen}
+                src={equipo.logo_url}
                 className="card-img-top"
                 alt={equipo.nombre}
+                style={{ height: "200px", objectFit: "cover" }}
               />
               <div className="card-body">
                 <h5 className="card-title">{equipo.nombre}</h5>
@@ -198,6 +207,17 @@ const Equipos = () => {
                       onChange={handleInputChange}
                     />
                   </div>
+
+                  {currentData.logo_url && (
+                    <div className="text-center my-2">
+                      <img
+                        src={currentData.logo_url}
+                        alt="Vista previa"
+                        style={{ maxHeight: "150px", objectFit: "contain" }}
+                      />
+                    </div>
+                  )}
+
                   <div className="form-group">
                     <label>Descripción</label>
                     <textarea
@@ -220,7 +240,8 @@ const Equipos = () => {
                   <input
                     type="hidden"
                     name="entrenador"
-                    value={currentUserId}
+                    value={currentUserId || ""}
+                    onChange={handleInputChange}
                   />
                   <div className="form-group">
                     <label>Deporte</label>

@@ -1,14 +1,11 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import { useState } from "react";
-import { useEffect } from "react";
-import { useLocation, Navigate, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import Index from "./components/Index";
 import Login from "./components/Login";
 import AdminDashboard from "./components/AdminDashboard";
 import EntrenadorDashboard from "./components/EntrenadorDashboard";
 import DuenoDashboard from "./components/DuenoDashboard";
-import { logout } from "./services/authService";
 import NavBar from "./components/NavBar";
 import NotFound from "./pages/404";
 import Error500 from "./pages/500";
@@ -16,6 +13,8 @@ import ServerError from "./pages/500";
 import Register from "./components/Register";
 import Recuperar from "./components/Recuperar";
 import ResetPassword from "./components/ResetPassword";
+import { AnimatePresence } from "framer-motion";
+import { logout } from "./services/authService";
 
 const ProtectedRoute = ({ isLoggedIn, userRole, allowedRoles, children }) => {
   const location = useLocation();
@@ -43,25 +42,94 @@ const getRoleFromToken = () => {
   if (token) {
     try {
       const decodedToken = jwtDecode(token);
-      if (decodedToken && decodedToken.rol) {
-        return decodedToken.rol;
-      } else {
-        return null;
-      }
+      return decodedToken.rol || null;
     } catch (error) {
-      void error;
       return null;
     }
-  } else {
-    return null;
   }
+  return null;
 };
-function LoginRedirect({ onLoginSuccess }) {
+
+const LoginRedirect = ({ onLoginSuccess }) => {
   useEffect(() => {
     onLoginSuccess();
   }, [onLoginSuccess]);
+
   return null;
-}
+};
+
+const AnimatedRoutes = ({ isLoggedIn, userRole, handleLoginSuccess, handleLogout }) => {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<Index />} />
+        <Route path="/acceso-denegado" element={<Unauthorized />} />
+        <Route path="/error-500" element={<Error500 />} />
+        <Route path="/500" element={<ServerError />} />
+        <Route path="*" element={<NotFound />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/recuperar" element={<Recuperar />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+
+        <Route
+          path="/login"
+          element={
+            isLoggedIn ? (
+              <LoginRedirect onLoginSuccess={handleLoginSuccess} />
+            ) : (
+              <Login onLoginSuccess={handleLoginSuccess} />
+            )
+          }
+        />
+
+        <Route
+          path="/Administracion"
+          element={
+            <ProtectedRoute
+              isLoggedIn={isLoggedIn}
+              userRole={userRole}
+              allowedRoles={["admin"]}
+            >
+              <div className="vh-100 d-flex flex-column">
+                <NavBar handleLogout={handleLogout} />
+                <AdminDashboard />
+              </div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Propietarios"
+          element={
+            <ProtectedRoute
+              isLoggedIn={isLoggedIn}
+              userRole={userRole}
+              allowedRoles={["presidente"]}
+            >
+              <DuenoDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Entrenadores"
+          element={
+            <ProtectedRoute
+              isLoggedIn={isLoggedIn}
+              userRole={userRole}
+              allowedRoles={["entrenador"]}
+            >
+              <div className="vh-100 d-flex flex-column">
+                <NavBar handleLogout={handleLogout} />
+                <EntrenadorDashboard />
+              </div>
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </AnimatePresence>
+  );
+};
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -72,8 +140,7 @@ function App() {
 
   useEffect(() => {
     const handleStorageChange = () => {
-      const loggedIn = !!localStorage.getItem("accessToken");
-      setIsLoggedIn(loggedIn);
+      setIsLoggedIn(!!localStorage.getItem("accessToken"));
       setUserRole(getRoleFromToken());
     };
     window.addEventListener("storage", handleStorageChange);
@@ -108,77 +175,12 @@ function App() {
   };
 
   return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-
-      <Route path="/acceso-denegado" element={<Unauthorized />} />
-      <Route path="/error-500" element={<Error500 />} />
-      <Route path="*" element={<NotFound />} />
-      <Route path="/500" element={<ServerError />} />
-      <Route path="/register" element={<Register />} />
-
-      <Route path="/recuperar" element={<Recuperar />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
-
-      <Route
-        path="/login"
-        element={
-          isLoggedIn ? (
-            <LoginRedirect onLoginSuccess={handleLoginSuccess} />
-          ) : (
-            <Login onLoginSuccess={handleLoginSuccess} />
-          )
-        }
-      />
-
-      {/* <Route path="/reset-password" element={<PasswordResetRequest />} />
-        <Route path="/reset-password/:uidb64/:token" element={<PasswordResetConfirm />} />
-         */}
-
-      <Route
-        path="/Administracion"
-        element={
-          <ProtectedRoute
-            isLoggedIn={isLoggedIn}
-            userRole={userRole}
-            allowedRoles={["admin"]}
-          >
-            <div className="vh-100 d-flex flex-column">
-              <NavBar handleLogout={handleLogout} />
-              <AdminDashboard />
-            </div>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/Propietarios"
-        element={
-          <ProtectedRoute
-            isLoggedIn={isLoggedIn}
-            userRole={userRole}
-            allowedRoles={["presidente"]}
-          >
-            <DuenoDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/Entrenadores"
-        element={
-          <ProtectedRoute
-            isLoggedIn={isLoggedIn}
-            userRole={userRole}
-            allowedRoles={["entrenador"]}
-          >
-            <div className="vh-100 d-flex flex-column">
-              <NavBar handleLogout={handleLogout} />
-              <EntrenadorDashboard />
-            </div>
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
+    <AnimatedRoutes
+      isLoggedIn={isLoggedIn}
+      userRole={userRole}
+      handleLoginSuccess={handleLoginSuccess}
+      handleLogout={handleLogout}
+    />
   );
 }
 

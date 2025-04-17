@@ -3,7 +3,7 @@ import Sidebar from "./Sidebar";
 import Usuarios from "./Cruds/Usuarios";
 import Deportes from "./Cruds/Deportes";
 import Posiciones from './Cruds/Posiciones';
-//import Eventos from './Cruds/Eventos';
+import Eventos from './Cruds/Eventos';
 // import Eventos from "./Cruds/Eventos";
 
 
@@ -15,19 +15,21 @@ function AdminDashboard() {
       case 'Usuarios': return <Usuarios />;
       case 'Deportes': return <Deportes />;
       case 'Posiciones': return <Posiciones />;
+      case 'Eventos': return <Eventos />;
       //case 'Equipos': return <Equipos />;
       // case 'Eventos' : return <Eventos />;
     }
   };
   const menuItems = [
-    { name: 'Usuarios', component: 'Usuarios', icon: null },
-    { name: 'Deportes', component: 'Deportes', icon: null },
-    { name: 'Posiciones', component: 'Posiciones', icon: null },
-    //{ name: 'Eventos', component: 'Eventos', icon: null },
-    // { name: 'Equipos', component: 'Equipos', icon: null },
-    // { name: 'Entrenadores', component: 'Entrenadores', icon: null },
-    // { name: 'Jugadores', component: 'Jugadores', icon: null },
+    { name: 'Usuarios', component: 'Usuarios', icon: 'bi bi-people-fill' },
+    { name: 'Deportes', component: 'Deportes', icon: 'bi bi-trophy-fill' },
+    { name: 'Posiciones', component: 'Posiciones', icon: 'bi bi-list-ol' },
+    { name: 'Eventos', component: 'Eventos', icon: 'bi bi-calendar-event-fill' },
+    // { name: 'Equipos', component: 'Equipos', icon: 'bi bi-shield-fill' },
+    // { name: 'Entrenadores', component: 'Entrenadores', icon: 'bi bi-person-badge-fill' },
+    // { name: 'Jugadores', component: 'Jugadores', icon: 'bi bi-person-lines-fill' },
   ];
+  
   return (
       <div className="d-flex flex-grow-1 overflow-hidden">
         <Sidebar

@@ -1,7 +1,4 @@
 import React, { useState } from 'react';
-// import user from '../assets/user.svg';
-// import contract from '../assets/contract.svg';
-
 
 const Sidebar = ({ onSelectComponent, activeComponent, menuItems }) => {
   const [collapsed, setCollapsed] = useState(false);
@@ -11,7 +8,11 @@ const Sidebar = ({ onSelectComponent, activeComponent, menuItems }) => {
   return (
     <div
       className={`border-end bg-light ${collapsed ? 'p-2' : 'p-3'} d-flex flex-column align-items-${collapsed ? 'center' : 'start'}`}
-      style={{ minHeight: '100vh', width: collapsed ? '60px' : '200px', transition: 'width 0.3s' }}
+      style={{
+        minHeight: '100vh',
+        width: collapsed ? '60px' : '220px',
+        transition: 'width 0.3s ease',
+      }}
     >
       <button 
         className="btn btn-outline-secondary w-100 mb-3"
@@ -25,13 +26,19 @@ const Sidebar = ({ onSelectComponent, activeComponent, menuItems }) => {
         {menuItems.map(item => (
           <li className="nav-item" key={item.name}>
             <button
-              className={`nav-link d-flex align-items-center gap-2 ${
-                activeComponent === item.component ? 'active bg-primary text-white' : 'text-dark'
-              }`}
+              className={`nav-link d-flex align-items-center gap-2 px-3 py-2 rounded 
+                ${activeComponent === item.component ? 'active bg-primary text-white' : 'text-dark'}`}
               onClick={() => onSelectComponent(item.component)}
               title={collapsed ? item.name : undefined}
+              style={{
+                fontSize: '1rem',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                transition: 'background-color 0.2s',
+              }}
             >
-              <img src={item.icon} alt={item.name} style={{ width: '20px', height: '20px' }} />
+              <i className={`${item.icon} fs-5`}></i>
               {!collapsed && <span>{item.name}</span>}
             </button>
           </li>
