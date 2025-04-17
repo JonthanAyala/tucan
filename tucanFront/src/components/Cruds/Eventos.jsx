@@ -8,17 +8,11 @@ const Eventos = () => {
     const [showModal, setShowModal] = useState(false);
     const [currentData, setCurrentData] = useState(null);
     const [equipos, setEquipos] = useState([]);
-    const [deportes, setDeportes] = useState([]); // Lista de deportes
-    const [deporteSeleccionado, setDeporteSeleccionado] = useState(""); // Deporte seleccionado
+    const [deportes, setDeportes] = useState([]);
+    const [deporteSeleccionado, setDeporteSeleccionado] = useState("");
     const prefijo = "/eventos/api/";
     const prefijoEquipos = "/equipos/api/";
-    const prefijoDeportes = "/deportes/api/"; // Endpoint para deportes
-
-    // Función para formatear la fecha
-    const formatFecha = (fecha) => {
-        const date = new Date(fecha);
-        return date.toISOString().slice(0, 16); // Formato: YYYY-MM-DDTHH:mm
-    };
+    const prefijoDeportes = "/deportes/api/";
 
     // Obtener el nombre del equipo por su ID
     const getEquipoNombre = (id) => {
@@ -55,17 +49,18 @@ const Eventos = () => {
         fetchData();
     }, []);
 
-    // Manejar la edición de un evento
+
     const handleEdit = (editar) => {
+        console.log("Deporte del evento a editar:", editar.deporte); // Verifica el valor del deporte
         setCurrentData({
             ...editar,
-            fecha: formatFecha(editar.fecha), // Asegura que la fecha esté en el formato correcto
+            fecha: new Date(editar.fecha).toISOString().slice(0, 16), // Mantén la fecha y hora exactas
         });
-        setDeporteSeleccionado(editar.deporte); // Seleccionar el deporte del evento
+        setDeporteSeleccionado(String(editar.deporte)); // Asegúrate de que el valor sea una cadena si los IDs son cadenas
+        console.log("Deporte seleccionado al editar:", String(editar.deporte)); // Verifica el valor que se asigna
         setShowModal(true);
     };
 
-    // Manejar la creación de un nuevo evento
     const handleCreate = () => {
         setCurrentData({
             nombre: "",
@@ -75,22 +70,22 @@ const Eventos = () => {
             puntos_equipo1: 0,
             puntos_equipo2: 0,
         });
-        setDeporteSeleccionado(""); // Reiniciar el deporte seleccionado
+        setDeporteSeleccionado("");
         setShowModal(true);
     };
 
     // Guardar un evento (crear o actualizar)
     const handleSave = () => {
-        if (!currentData.nombre || !currentData.fecha || !currentData.equipo1 || !currentData.equipo2 || !deporteSeleccionado) {
+        if (!currentData.nombre || !currentData.fecha || !deporteSeleccionado) {
             Swal.fire("Campos incompletos", "Por favor completa todos los campos obligatorios.", "warning");
             return;
         }
 
         const datosAEnviar = {
             ...currentData,
-            deporte: deporteSeleccionado, // Enviar el deporte seleccionado
-            equipo1: parseInt(currentData.equipo1, 10),
-            equipo2: parseInt(currentData.equipo2, 10),
+            deporte: deporteSeleccionado,
+            equipo1: currentData.equipo1 ? parseInt(currentData.equipo1, 10) : null,
+            equipo2: currentData.equipo2 ? parseInt(currentData.equipo2, 10) : null,
             puntos_equipo1: parseInt(currentData.puntos_equipo1, 10),
             puntos_equipo2: parseInt(currentData.puntos_equipo2, 10),
         };
@@ -107,13 +102,8 @@ const Eventos = () => {
                     Swal.fire("Éxito", "Evento actualizado con éxito.", "success");
                 })
                 .catch((error) => {
-                    if (error.response && error.response.status === 400) {
-                        const mensajeError = error.response.data.detail || "Ocurrió un error al guardar el evento.";
-                        Swal.fire("Error de validación", mensajeError, "error");
-                    } else {
-                        console.error("Error al actualizar el evento:", error);
-                        Swal.fire("Error", "Ocurrió un error al actualizar el evento.", "error");
-                    }
+                    console.error("Error al actualizar el evento:", error);
+                    Swal.fire("Error", "Ocurrió un error al actualizar el evento.", "error");
                 });
         } else {
             peticion(apiClient, prefijo, "post", datosAEnviar)
@@ -123,15 +113,35 @@ const Eventos = () => {
                     Swal.fire("Éxito", "Evento creado con éxito.", "success");
                 })
                 .catch((error) => {
-                    if (error.response && error.response.status === 400) {
-                        const mensajeError = error.response.data.detail || "Ocurrió un error al guardar el evento.";
-                        Swal.fire("Error de validación", mensajeError, "error");
-                    } else {
-                        console.error("Error al crear el evento:", error);
-                        Swal.fire("Error", "Ocurrió un error al crear el evento.", "error");
-                    }
+                    console.error("Error al crear el evento:", error);
+                    Swal.fire("Error", "Ocurrió un error al crear el evento.", "error");
                 });
         }
+    };
+
+    // Manejar la eliminación de un evento
+    const handleDelete = (id) => {
+        Swal.fire({
+            title: "¿Estás seguro?",
+            text: "No podrás revertir esta acción.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Sí, eliminar",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                peticion(apiClient, `${prefijo}${id}/`, "delete")
+                    .then(() => {
+                        setData(data.filter((evento) => evento.id !== id));
+                        Swal.fire("Eliminado", "El evento ha sido eliminado.", "success");
+                    })
+                    .catch((error) => {
+                        console.error("Error al eliminar el evento:", error);
+                        Swal.fire("Error", "No se pudo eliminar el evento.", "error");
+                    });
+            }
+        });
     };
 
     // Manejar cambios en los campos del formulario
@@ -143,7 +153,6 @@ const Eventos = () => {
     // Manejar cambios en el selector de deportes
     const handleDeporteChange = (e) => {
         setDeporteSeleccionado(e.target.value);
-        setCurrentData({ ...currentData, equipo1: "", equipo2: "" }); // Reiniciar equipos seleccionados
     };
 
     // Filtrar equipos según el deporte seleccionado
@@ -179,6 +188,7 @@ const Eventos = () => {
                                     <div className="col-md-3 mb-4" key={i}>
                                         <div className="card shadow-sm border-0 rounded-4 h-100">
                                             <div className="card-body text-center">
+                                                <h5 className="fw-semibold mb-3">{evento.nombre}</h5>
                                                 <h5 className="fw-semibold mb-3">
                                                     {getEquipoNombre(evento.equipo1)} <span className="text-muted">vs</span>{" "}
                                                     {getEquipoNombre(evento.equipo2)}
@@ -224,6 +234,7 @@ const Eventos = () => {
                                     <div className="col-md-3 mb-4" key={i}>
                                         <div className="card shadow-sm border-0 rounded-4 h-100">
                                             <div className="card-body text-center">
+                                                <h5 className="fw-semibold mb-3">{evento.nombre}</h5>
                                                 <h5 className="fw-semibold mb-3">
                                                     <span
                                                         className={`${
@@ -295,58 +306,6 @@ const Eventos = () => {
                             <div className="modal-body">
                                 <form>
                                     <div className="form-group mb-3">
-                                        <label>Deporte <span className="text-danger">*</span></label>
-                                        <select
-                                            className="form-control"
-                                            value={deporteSeleccionado}
-                                            onChange={handleDeporteChange}
-                                            required
-                                        >
-                                            <option value="">Selecciona un deporte</option>
-                                            {deportes.map((deporte) => (
-                                                <option key={deporte.id} value={deporte.id}>
-                                                    {deporte.nombre}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="form-group mb-3">
-                                        <label>Equipo 1 <span className="text-danger">*</span></label>
-                                        <select
-                                            className="form-control"
-                                            name="equipo1"
-                                            value={currentData?.equipo1 || ""}
-                                            onChange={handleInputChange}
-                                            required
-                                            disabled={!deporteSeleccionado} // Deshabilitar si no hay deporte seleccionado
-                                        >
-                                            <option value="">Selecciona un equipo</option>
-                                            {equiposFiltrados.map((equipo) => (
-                                                <option key={equipo.id} value={equipo.id}>
-                                                    {equipo.nombre}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="form-group mb-3">
-                                        <label>Equipo 2 <span className="text-danger">*</span></label>
-                                        <select
-                                            className="form-control"
-                                            name="equipo2"
-                                            value={currentData?.equipo2 || ""}
-                                            onChange={handleInputChange}
-                                            required
-                                            disabled={!deporteSeleccionado} // Deshabilitar si no hay deporte seleccionado
-                                        >
-                                            <option value="">Selecciona un equipo</option>
-                                            {equiposFiltrados.map((equipo) => (
-                                                <option key={equipo.id} value={equipo.id}>
-                                                    {equipo.nombre}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="form-group mb-3">
                                         <label>Nombre del Evento <span className="text-danger">*</span></label>
                                         <input
                                             type="text"
@@ -356,6 +315,56 @@ const Eventos = () => {
                                             onChange={handleInputChange}
                                             required
                                         />
+                                    </div>
+                                    <div className="form-group mb-3">
+                                        <label>Deporte <span className="text-danger">*</span></label>
+                                        <select
+                                            className="form-control"
+                                            value={deporteSeleccionado} // Vincula el estado al valor del select
+                                            onChange={handleDeporteChange} // Actualiza el estado cuando el usuario cambia el deporte
+                                            required
+                                        >
+                                            <option value="">Selecciona un deporte</option>
+                                            {deportes.map((deporte) => (
+                                                <option key={deporte.id} value={String(deporte.id)}>
+                                                    {deporte.nombre}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="form-group mb-3">
+                                        <label>Equipo 1</label>
+                                        <select
+                                            className="form-control"
+                                            name="equipo1"
+                                            value={currentData?.equipo1 || ""}
+                                            onChange={handleInputChange}
+                                            disabled={!deporteSeleccionado}
+                                        >
+                                            <option value="">Selecciona un equipo</option>
+                                            {equiposFiltrados.map((equipo) => (
+                                                <option key={equipo.id} value={equipo.id}>
+                                                    {equipo.nombre}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="form-group mb-3">
+                                        <label>Equipo 2</label>
+                                        <select
+                                            className="form-control"
+                                            name="equipo2"
+                                            value={currentData?.equipo2 || ""}
+                                            onChange={handleInputChange}
+                                            disabled={!deporteSeleccionado}
+                                        >
+                                            <option value="">Selecciona un equipo</option>
+                                            {equiposFiltrados.map((equipo) => (
+                                                <option key={equipo.id} value={equipo.id}>
+                                                    {equipo.nombre}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
                                     <div className="form-group mb-3">
                                         <label>Fecha <span className="text-danger">*</span></label>
