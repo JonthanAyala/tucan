@@ -63,7 +63,11 @@ const Equipos = () => {
           })
           .catch((error) => {
             console.error("Error al eliminar el equipo:", error);
-            Swal.fire("Error", "Ocurrió un error al eliminar el equipo.", "error");
+            Swal.fire(
+              "Error",
+              "Ocurrió un error al eliminar el equipo.",
+              "error"
+            );
           });
       }
     });
@@ -71,11 +75,17 @@ const Equipos = () => {
 
   const handleSave = () => {
     if (!currentData.nombre || !currentData.deporte) {
-      Swal.fire("Campos incompletos", "Por favor completa nombre y deporte.", "warning");
+      Swal.fire(
+        "Campos incompletos",
+        "Por favor completa nombre y deporte.",
+        "warning"
+      );
       return;
     }
+    const dataToSave = { ...currentData, entrenador: currentUserId };
+
     if (currentData.id) {
-      peticion(apiClient, `${prefijo}${currentData.id}/`, "put", currentData)
+      peticion(apiClient, `${prefijo}${currentData.id}/`, "put", dataToSave)
         .then((res) => {
           setData(
             data.map((equipo) =>
@@ -87,10 +97,14 @@ const Equipos = () => {
         })
         .catch((error) => {
           console.error("Error al actualizar el equipo:", error);
-          Swal.fire("Error", "Ocurrió un error al actualizar el equipo.", "error");
+          Swal.fire(
+            "Error",
+            "Ocurrió un error al actualizar el equipo.",
+            "error"
+          );
         });
     } else {
-      peticion(apiClient, prefijo, "post", currentData)
+      peticion(apiClient, prefijo, "post", dataToSave)
         .then((res) => {
           setData([...data, res.data]);
           setShowModal(false);
@@ -214,7 +228,8 @@ const Equipos = () => {
                   <input
                     type="hidden"
                     name="entrenador"
-                    value={currentUserId}
+                    value={currentUserId || ""}
+                    onChange={handleInputChange}
                   />
                   <div className="form-group">
                     <label>Deporte</label>
