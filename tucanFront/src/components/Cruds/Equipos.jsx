@@ -74,9 +74,8 @@ const Equipos = () => {
       Swal.fire("Campos incompletos", "Por favor completa nombre y deporte.", "warning");
       return;
     }
-
     if (currentData.id) {
-      peticion(apiClient, `${prefijo}${currentData.id}/`, "put", datosAEnviar)
+      peticion(apiClient, `${prefijo}${currentData.id}/`, "put", currentData)
         .then((res) => {
           setData(
             data.map((equipo) =>
@@ -91,7 +90,7 @@ const Equipos = () => {
           Swal.fire("Error", "Ocurrió un error al actualizar el equipo.", "error");
         });
     } else {
-      peticion(apiClient, prefijo, "post", datosAEnviar)
+      peticion(apiClient, prefijo, "post", currentData)
         .then((res) => {
           setData([...data, res.data]);
           setShowModal(false);
