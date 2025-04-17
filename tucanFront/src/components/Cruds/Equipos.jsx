@@ -7,41 +7,44 @@ const Equipos = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [currentData, setCurrentData] = useState(null);
-  const currentUserId = localStorage.getItem("id");
+  const [currentData, setCurrentData] = useState({});
+  const [logoPreview, setLogoPreview] = useState(null);
+  const [logoFile, setLogoFile] = useState(null);
   const [deportes, setDeportes] = useState([]);
+  const currentUserId = localStorage.getItem("id");
   const navi = useNavigate();
   const prefijo = "/equipos/api/";
 
-  const loadDeportes = async () => {
-    try {
-      const response = await peticion(apiClient, "/deportes/api/");
-      setDeportes(response.data);
-    } catch (error) {
-      console.error("Error al cargar los deportes:", error);
-    }
-  };
-
   useEffect(() => {
-    peticion(apiClient, prefijo)
-      .then((res) => {
-        setData(res.data);
-        setLoading(false);
-        loadDeportes();
-      })
-      .catch((error) => {
+    const fetchData = async () => {
+      try {
+        const [equiposRes, deportesRes] = await Promise.all([
+          peticion(apiClient, prefijo),
+          peticion(apiClient, "/deportes/api/")
+        ]);
+        setData(equiposRes.data);
+        setDeportes(deportesRes.data);
+      } catch (error) {
         console.error("Error al cargar los datos:", error);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchData();
   }, []);
 
   const handleEdit = (editar) => {
     setCurrentData(editar);
+    setLogoPreview(editar.logo || null);
+    setLogoFile(null);
     setShowModal(true);
   };
 
   const handleCreate = () => {
     setCurrentData({});
+    setLogoPreview(null);
+    setLogoFile(null);
     setShowModal(true);
   };
 
@@ -63,11 +66,7 @@ const Equipos = () => {
           })
           .catch((error) => {
             console.error("Error al eliminar el equipo:", error);
-            Swal.fire(
-              "Error",
-              "Ocurrió un error al eliminar el equipo.",
-              "error"
-            );
+            Swal.fire("Error", "Ocurrió un error al eliminar el equipo.", "error");
           });
       }
     });
@@ -75,17 +74,27 @@ const Equipos = () => {
 
   const handleSave = () => {
     if (!currentData.nombre || !currentData.deporte) {
-      Swal.fire(
-        "Campos incompletos",
-        "Por favor completa nombre y deporte.",
-        "warning"
-      );
+      Swal.fire("Campos incompletos", "Por favor completa nombre y deporte.", "warning");
       return;
     }
-    const dataToSave = { ...currentData, entrenador: currentUserId };
+
+    const formData = new FormData();
+    formData.append("nombre", currentData.nombre);
+    formData.append("descripcion", currentData.descripcion || "");
+    formData.append("ciudad", currentData.ciudad || "");
+    formData.append("deporte", currentData.deporte);
+    formData.append("entrenador", currentUserId);
+    formData.append("num_titulares", currentData.num_titulares || 0);
+    formData.append("num_suplentes", currentData.num_suplentes || 0);
+
+    if (logoFile) {
+      formData.append("logo", logoFile);
+    }
+
+    const headers = { "Content-Type": "multipart/form-data" };
 
     if (currentData.id) {
-      peticion(apiClient, `${prefijo}${currentData.id}/`, "put", dataToSave)
+      peticion(apiClient, `${prefijo}${currentData.id}/`, "put", formData, headers)
         .then((res) => {
           setData(
             data.map((equipo) =>
@@ -97,14 +106,10 @@ const Equipos = () => {
         })
         .catch((error) => {
           console.error("Error al actualizar el equipo:", error);
-          Swal.fire(
-            "Error",
-            "Ocurrió un error al actualizar el equipo.",
-            "error"
-          );
+          Swal.fire("Error", "Ocurrió un error al actualizar el equipo.", "error");
         });
     } else {
-      peticion(apiClient, prefijo, "post", dataToSave)
+      peticion(apiClient, prefijo, "post", formData, headers)
         .then((res) => {
           setData([...data, res.data]);
           setShowModal(false);
@@ -122,6 +127,14 @@ const Equipos = () => {
     setCurrentData({ ...currentData, [name]: value });
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setLogoFile(file);
+      setLogoPreview(URL.createObjectURL(file));
+    }
+  };
+
   return (
     <div>
       <h3>Tabla de equipos</h3>
@@ -133,24 +146,17 @@ const Equipos = () => {
         {data.map((equipo) => (
           <div className="col-md-4 mb-4" key={equipo.id}>
             <div className="card h-100 shadow-sm">
-              <img
-                src={equipo.logo_url}
-                className="card-img-top"
-                alt={equipo.nombre}
-                style={{ height: "200px", objectFit: "cover" }}
-              />
+              {equipo.logo && (
+                <img
+                  src={equipo.logo}
+                  className="card-img-top"
+                  alt={equipo.nombre}
+                  style={{ height: "200px", objectFit: "cover" }}
+                />
+              )}
               <div className="card-body">
                 <h5 className="card-title">{equipo.nombre}</h5>
-                <div className="d-flex justify-content-between">
-                  <div className="text-success text-center">
-                    <h6 className="mb-0">{equipo.victorias}</h6>
-                    <small>Victorias</small>
-                  </div>
-                  <div className="text-danger text-center">
-                    <h6 className="mb-0">{equipo.derrotas}</h6>
-                    <small>Derrotas</small>
-                  </div>
-                </div>
+                <p className="text-muted">{equipo.ciudad}</p>
               </div>
               <div className="card-footer d-flex justify-content-between">
                 <button
@@ -197,21 +203,21 @@ const Equipos = () => {
                       onChange={handleInputChange}
                     />
                   </div>
+
                   <div className="form-group">
-                    <label>Logo (URL)</label>
+                    <label>Logo (imagen)</label>
                     <input
-                      type="text"
+                      type="file"
                       className="form-control"
-                      name="logo_url"
-                      value={currentData.logo_url || ""}
-                      onChange={handleInputChange}
+                      accept="image/*"
+                      onChange={handleFileChange}
                     />
                   </div>
 
-                  {currentData.logo_url && (
+                  {logoPreview && (
                     <div className="text-center my-2">
                       <img
-                        src={currentData.logo_url}
+                        src={logoPreview}
                         alt="Vista previa"
                         style={{ maxHeight: "150px", objectFit: "contain" }}
                       />
@@ -237,12 +243,6 @@ const Equipos = () => {
                       onChange={handleInputChange}
                     />
                   </div>
-                  <input
-                    type="hidden"
-                    name="entrenador"
-                    value={currentUserId || ""}
-                    onChange={handleInputChange}
-                  />
                   <div className="form-group">
                     <label>Deporte</label>
                     <select
@@ -294,7 +294,9 @@ const Equipos = () => {
                   className="btn btn-secondary"
                   onClick={() => {
                     setShowModal(false);
-                    setCurrentData(null);
+                    setCurrentData({});
+                    setLogoFile(null);
+                    setLogoPreview(null);
                   }}
                 >
                   Cancelar
