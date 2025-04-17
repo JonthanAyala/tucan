@@ -14,6 +14,8 @@ import NotFound from "./pages/404";
 import Error500 from "./pages/500";
 import ServerError from "./pages/500";
 import Register from "./components/Register";
+import Recuperar from "./components/Recuperar";
+import ResetPassword from "./components/ResetPassword";
 
 const ProtectedRoute = ({ isLoggedIn, userRole, allowedRoles, children }) => {
   const location = useLocation();
@@ -114,6 +116,9 @@ function App() {
       <Route path="*" element={<NotFound />} />
       <Route path="/500" element={<ServerError />} />
       <Route path="/register" element={<Register />} />
+
+      <Route path="/recuperar" element={<Recuperar />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
       <Route
         path="/login"
