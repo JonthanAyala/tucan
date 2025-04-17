@@ -75,11 +75,6 @@ const Equipos = () => {
       return;
     }
 
-    const datosAEnviar = {
-      ...currentData,
-      entrenador: parseInt(currentUserId, 10),
-    };
-
     if (currentData.id) {
       peticion(apiClient, `${prefijo}${currentData.id}/`, "put", datosAEnviar)
         .then((res) => {
