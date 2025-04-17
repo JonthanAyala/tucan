@@ -8,26 +8,36 @@ const Eventos = () => {
     const [showModal, setShowModal] = useState(false);
     const [currentData, setCurrentData] = useState(null);
     const [equipos, setEquipos] = useState([]);
+    const [deportes, setDeportes] = useState([]); // Lista de deportes
+    const [deporteSeleccionado, setDeporteSeleccionado] = useState(""); // Deporte seleccionado
     const prefijo = "/eventos/api/";
     const prefijoEquipos = "/equipos/api/";
+    const prefijoDeportes = "/deportes/api/"; // Endpoint para deportes
 
-    const getEquipoNombre = (id) => {
-        const equipo = equipos.find((e) => e.id === id);
-        return equipo ? equipo.nombre : "Desconocido";
-    };
-
-    const ajustarFechaLocal = (fechaUTC) => {
-        const fecha = new Date(fechaUTC);
-        return new Date(fecha.getTime() - fecha.getTimezoneOffset() * 60000);
-    };
-
+    // Función para formatear la fecha
     const formatFecha = (fecha) => {
         const date = new Date(fecha);
         return date.toISOString().slice(0, 16); // Formato: YYYY-MM-DDTHH:mm
     };
 
+    // Obtener el nombre del equipo por su ID
+    const getEquipoNombre = (id) => {
+        const equipo = equipos.find((e) => e.id === id);
+        return equipo ? equipo.nombre : "Desconocido";
+    };
+
+    // Obtener el nombre del deporte por su ID
+    const getDeporteNombre = (id) => {
+        const deporte = deportes.find((d) => d.id === id);
+        return deporte ? deporte.nombre : "Desconocido";
+    };
+
+    // Cargar datos de deportes, equipos y eventos
     const fetchData = async () => {
         try {
+            const respDeportes = await peticion(apiClient, prefijoDeportes);
+            setDeportes(respDeportes.data);
+
             const respEquipos = await peticion(apiClient, prefijoEquipos);
             setEquipos(respEquipos.data);
 
@@ -45,64 +55,44 @@ const Eventos = () => {
         fetchData();
     }, []);
 
+    // Manejar la edición de un evento
     const handleEdit = (editar) => {
         setCurrentData({
             ...editar,
             fecha: formatFecha(editar.fecha), // Asegura que la fecha esté en el formato correcto
         });
+        setDeporteSeleccionado(editar.deporte); // Seleccionar el deporte del evento
         setShowModal(true);
     };
 
+    // Manejar la creación de un nuevo evento
     const handleCreate = () => {
         setCurrentData({
             nombre: "",
             fecha: "",
             equipo1: "",
             equipo2: "",
-            resultado: "",
+            puntos_equipo1: 0,
+            puntos_equipo2: 0,
         });
+        setDeporteSeleccionado(""); // Reiniciar el deporte seleccionado
         setShowModal(true);
     };
 
-    const handleDelete = (id) => {
-        Swal.fire({
-            title: "¿Estás seguro?",
-            text: "Esta acción eliminará el evento.",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#d33",
-            cancelButtonColor: "#6c757d",
-            confirmButtonText: "Sí, eliminar",
-        }).then((result) => {
-            if (result.isConfirmed) {
-                peticion(apiClient, `${prefijo}${id}/`, "delete")
-                    .then(() => {
-                        setData(data.filter((evento) => evento.id !== id));
-                        Swal.fire("Eliminado", "Evento eliminado con éxito.", "success");
-                    })
-                    .catch((error) => {
-                        console.error("Error al eliminar el evento:", error);
-                        Swal.fire("Error", "Ocurrió un error al eliminar el evento.", "error");
-                    });
-            }
-        });
-    };
-
+    // Guardar un evento (crear o actualizar)
     const handleSave = () => {
-        if (!currentData.nombre || !currentData.fecha || !currentData.equipo1 || !currentData.equipo2) {
+        if (!currentData.nombre || !currentData.fecha || !currentData.equipo1 || !currentData.equipo2 || !deporteSeleccionado) {
             Swal.fire("Campos incompletos", "Por favor completa todos los campos obligatorios.", "warning");
-            return;
-        }
-
-        if (currentData.equipo1 === currentData.equipo2) {
-            Swal.fire("Error", "Un equipo no puede enfrentarse a sí mismo.", "error");
             return;
         }
 
         const datosAEnviar = {
             ...currentData,
+            deporte: deporteSeleccionado, // Enviar el deporte seleccionado
             equipo1: parseInt(currentData.equipo1, 10),
             equipo2: parseInt(currentData.equipo2, 10),
+            puntos_equipo1: parseInt(currentData.puntos_equipo1, 10),
+            puntos_equipo2: parseInt(currentData.puntos_equipo2, 10),
         };
 
         if (currentData.id) {
@@ -117,8 +107,13 @@ const Eventos = () => {
                     Swal.fire("Éxito", "Evento actualizado con éxito.", "success");
                 })
                 .catch((error) => {
-                    console.error("Error al actualizar el evento:", error);
-                    Swal.fire("Error", "Ocurrió un error al actualizar el evento.", "error");
+                    if (error.response && error.response.status === 400) {
+                        const mensajeError = error.response.data.detail || "Ocurrió un error al guardar el evento.";
+                        Swal.fire("Error de validación", mensajeError, "error");
+                    } else {
+                        console.error("Error al actualizar el evento:", error);
+                        Swal.fire("Error", "Ocurrió un error al actualizar el evento.", "error");
+                    }
                 });
         } else {
             peticion(apiClient, prefijo, "post", datosAEnviar)
@@ -128,21 +123,35 @@ const Eventos = () => {
                     Swal.fire("Éxito", "Evento creado con éxito.", "success");
                 })
                 .catch((error) => {
-                    console.error("Error al crear el evento:", error);
-                    Swal.fire("Error", "Ocurrió un error al crear el evento.", "error");
+                    if (error.response && error.response.status === 400) {
+                        const mensajeError = error.response.data.detail || "Ocurrió un error al guardar el evento.";
+                        Swal.fire("Error de validación", mensajeError, "error");
+                    } else {
+                        console.error("Error al crear el evento:", error);
+                        Swal.fire("Error", "Ocurrió un error al crear el evento.", "error");
+                    }
                 });
         }
     };
 
+    // Manejar cambios en los campos del formulario
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setCurrentData({ ...currentData, [name]: value });
     };
 
+    // Manejar cambios en el selector de deportes
+    const handleDeporteChange = (e) => {
+        setDeporteSeleccionado(e.target.value);
+        setCurrentData({ ...currentData, equipo1: "", equipo2: "" }); // Reiniciar equipos seleccionados
+    };
+
+    // Filtrar equipos según el deporte seleccionado
+    const equiposFiltrados = equipos.filter((equipo) => parseInt(equipo.deporte, 10) === parseInt(deporteSeleccionado, 10));
+
     // Separar eventos en "Próximos" y "Finalizados"
-    const now = new Date();
-    const eventosProximos = data.filter((evento) => !evento.resultado);
-    const eventosFinalizados = data.filter((evento) => evento.resultado);
+    const eventosProximos = data.filter((evento) => !evento.puntos_equipo1 && !evento.puntos_equipo2);
+    const eventosFinalizados = data.filter((evento) => evento.puntos_equipo1 || evento.puntos_equipo2);
 
     return (
         <div className="container py-5" style={{ backgroundColor: "#e6f0ff" }}>
@@ -174,11 +183,12 @@ const Eventos = () => {
                                                     {getEquipoNombre(evento.equipo1)} <span className="text-muted">vs</span>{" "}
                                                     {getEquipoNombre(evento.equipo2)}
                                                 </h5>
+                                                <p className="fw-medium text-muted">Deporte: {getDeporteNombre(evento.deporte)}</p>
                                                 <p className="mb-1 text-primary fw-semibold">
-                                                    🕖 {ajustarFechaLocal(evento.fecha).toLocaleTimeString()}
+                                                    🕖 {new Date(evento.fecha).toLocaleTimeString()}
                                                 </p>
                                                 <p className="fw-medium">
-                                                    📅 {ajustarFechaLocal(evento.fecha).toLocaleDateString()}
+                                                    📅 {new Date(evento.fecha).toLocaleDateString()}
                                                 </p>
                                             </div>
                                             <div className="card-footer d-flex justify-content-between">
@@ -202,53 +212,68 @@ const Eventos = () => {
                                 <p className="text-center text-muted">No hay próximos eventos</p>
                             )}
                         </div>
-                        </section>
+                    </section>
 
-                        {/* Eventos Finalizados */}
-                        <section>
-                            <h4 className="text-center mb-3">Eventos Finalizados</h4>
-                            <hr className="mb-4" />
-                            <div className="row justify-content-center">
-                                {eventosFinalizados.length > 0 ? (
-                                    eventosFinalizados.map((evento, i) => (
-                                        <div className="col-md-3 mb-4" key={i}>
-                                            <div className="card shadow-sm border-0 rounded-4 h-100">
-                                                <div className="card-body text-center">
-                                                    <h5 className="fw-semibold mb-3">
-                                                        {getEquipoNombre(evento.equipo1)} <span className="text-muted">vs</span>{" "}
-                                                        {getEquipoNombre(evento.equipo2)}
-                                                    </h5>
-                                                    <p className="text-muted mb-0">📅 Fecha del partido:</p>
-                                                    <p className="fw-medium">{new Date(evento.fecha).toLocaleDateString()}</p>
-                                                    <div className="d-flex justify-content-around">
-                                                        <span
-                                                            className={`fw-bold ${evento.resultado === "Victoria"
-                                                                    ? "text-success"
-                                                                    : evento.resultado === "Empate"
-                                                                        ? "text-warning"
-                                                                        : "text-danger"
-                                                                }`}
-                                                        >
-                                                            {evento.resultado}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div className="card-footer d-flex justify-content-between">
-                                                    <button
-                                                        className="btn btn-danger btn-sm"
-                                                        onClick={() => handleDelete(evento.id)}
+                    {/* Eventos Finalizados */}
+                    <section>
+                        <h4 className="text-center mb-3">Eventos Finalizados</h4>
+                        <hr className="mb-4" />
+                        <div className="row justify-content-center">
+                            {eventosFinalizados.length > 0 ? (
+                                eventosFinalizados.map((evento, i) => (
+                                    <div className="col-md-3 mb-4" key={i}>
+                                        <div className="card shadow-sm border-0 rounded-4 h-100">
+                                            <div className="card-body text-center">
+                                                <h5 className="fw-semibold mb-3">
+                                                    <span
+                                                        className={`${
+                                                            evento.puntos_equipo1 > evento.puntos_equipo2
+                                                                ? "text-success"
+                                                                : evento.puntos_equipo1 < evento.puntos_equipo2
+                                                                ? "text-danger"
+                                                                : "text-secondary"
+                                                        }`}
                                                     >
-                                                        🗑️
-                                                    </button>
-                                                </div>
+                                                        {getEquipoNombre(evento.equipo1)}
+                                                    </span>{" "}
+                                                    <span className="text-muted">vs</span>{" "}
+                                                    <span
+                                                        className={`${
+                                                            evento.puntos_equipo2 > evento.puntos_equipo1
+                                                                ? "text-success"
+                                                                : evento.puntos_equipo2 < evento.puntos_equipo1
+                                                                ? "text-danger"
+                                                                : "text-secondary"
+                                                        }`}
+                                                    >
+                                                        {getEquipoNombre(evento.equipo2)}
+                                                    </span>
+                                                </h5>
+                                                <p className="fw-medium text-muted">Deporte: {getDeporteNombre(evento.deporte)}</p>
+                                                <p className="text-muted mb-0">📅 Fecha del partido:</p>
+                                                <p className="fw-medium">{new Date(evento.fecha).toLocaleDateString()}</p>
+                                                <p className="fw-medium">Puntos {getEquipoNombre(evento.equipo1)}: {evento.puntos_equipo1}</p>
+                                                <p className="fw-medium">Puntos {getEquipoNombre(evento.equipo2)}: {evento.puntos_equipo2}</p>
+                                                <p className="fw-bold">
+                                                    {evento.resultado ? `${evento.resultado}` : "Resultado no disponible"}
+                                                </p>
+                                            </div>
+                                            <div className="card-footer d-flex justify-content-between">
+                                                <button
+                                                    className="btn btn-danger btn-sm"
+                                                    onClick={() => handleDelete(evento.id)}
+                                                >
+                                                    🗑️
+                                                </button>
                                             </div>
                                         </div>
-                                    ))
-                                ) : (
-                                    <p className="text-center text-muted">No hay eventos finalizados</p>
-                                )}
-                            </div>
-                        </section>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-center text-muted">No hay eventos finalizados</p>
+                            )}
+                        </div>
+                    </section>
                 </>
             )}
 
@@ -270,7 +295,59 @@ const Eventos = () => {
                             <div className="modal-body">
                                 <form>
                                     <div className="form-group mb-3">
-                                        <label>Nombre <span className="text-danger">*</span></label>
+                                        <label>Deporte <span className="text-danger">*</span></label>
+                                        <select
+                                            className="form-control"
+                                            value={deporteSeleccionado}
+                                            onChange={handleDeporteChange}
+                                            required
+                                        >
+                                            <option value="">Selecciona un deporte</option>
+                                            {deportes.map((deporte) => (
+                                                <option key={deporte.id} value={deporte.id}>
+                                                    {deporte.nombre}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="form-group mb-3">
+                                        <label>Equipo 1 <span className="text-danger">*</span></label>
+                                        <select
+                                            className="form-control"
+                                            name="equipo1"
+                                            value={currentData?.equipo1 || ""}
+                                            onChange={handleInputChange}
+                                            required
+                                            disabled={!deporteSeleccionado} // Deshabilitar si no hay deporte seleccionado
+                                        >
+                                            <option value="">Selecciona un equipo</option>
+                                            {equiposFiltrados.map((equipo) => (
+                                                <option key={equipo.id} value={equipo.id}>
+                                                    {equipo.nombre}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="form-group mb-3">
+                                        <label>Equipo 2 <span className="text-danger">*</span></label>
+                                        <select
+                                            className="form-control"
+                                            name="equipo2"
+                                            value={currentData?.equipo2 || ""}
+                                            onChange={handleInputChange}
+                                            required
+                                            disabled={!deporteSeleccionado} // Deshabilitar si no hay deporte seleccionado
+                                        >
+                                            <option value="">Selecciona un equipo</option>
+                                            {equiposFiltrados.map((equipo) => (
+                                                <option key={equipo.id} value={equipo.id}>
+                                                    {equipo.nombre}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="form-group mb-3">
+                                        <label>Nombre del Evento <span className="text-danger">*</span></label>
                                         <input
                                             type="text"
                                             className="form-control"
@@ -292,53 +369,35 @@ const Eventos = () => {
                                         />
                                     </div>
                                     <div className="form-group mb-3">
-                                        <label>Equipo 1 <span className="text-danger">*</span></label>
-                                        <select
+                                        <label>Puntos Equipo 1</label>
+                                        <input
+                                            type="number"
                                             className="form-control"
-                                            name="equipo1"
-                                            value={currentData?.equipo1 || ""}
-                                            onChange={handleInputChange}
-                                            required
-                                        >
-                                            <option value="">Selecciona un equipo</option>
-                                            {equipos.map((equipo) => (
-                                                <option key={equipo.id} value={equipo.id}>
-                                                    {equipo.nombre}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            name="puntos_equipo1"
+                                            value={currentData?.puntos_equipo1 || ""}
+                                            onChange={(e) =>
+                                                setCurrentData({
+                                                    ...currentData,
+                                                    puntos_equipo1: e.target.value === "" ? 0 : parseInt(e.target.value, 10),
+                                                })
+                                            }
+                                        />
                                     </div>
                                     <div className="form-group mb-3">
-                                        <label>Equipo 2 <span className="text-danger">*</span></label>
-                                        <select
+                                        <label>Puntos Equipo 2</label>
+                                        <input
+                                            type="number"
                                             className="form-control"
-                                            name="equipo2"
-                                            value={currentData?.equipo2 || ""}
-                                            onChange={handleInputChange}
-                                            required
-                                        >
-                                            <option value="">Selecciona un equipo</option>
-                                            {equipos.map((equipo) => (
-                                                <option key={equipo.id} value={equipo.id}>
-                                                    {equipo.nombre}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            name="puntos_equipo2"
+                                            value={currentData?.puntos_equipo2 || ""}
+                                            onChange={(e) =>
+                                                setCurrentData({
+                                                    ...currentData,
+                                                    puntos_equipo2: e.target.value === "" ? 0 : parseInt(e.target.value, 10),
+                                                })
+                                            }
+                                        />
                                     </div>
-                                    {currentData.id && new Date(currentData.fecha) <= new Date() ? (
-                                        <div className="form-group mb-3">
-                                            <label>Resultado</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                name="resultado"
-                                                value={currentData?.resultado || ""}
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-                                    ) : (
-                                        <p className="text-danger">El resultado solo se puede ingresar después de la fecha y hora del evento.</p>
-                                    )}
                                 </form>
                             </div>
                             <div className="modal-footer">
