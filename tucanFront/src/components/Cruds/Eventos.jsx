@@ -14,28 +14,30 @@ const Eventos = () => {
     const prefijoEquipos = "/equipos/api/";
     const prefijoDeportes = "/deportes/api/";
 
-    // Obtener el nombre del equipo por su ID
     const getEquipoNombre = (id) => {
         const equipo = equipos.find((e) => e.id === id);
         return equipo ? equipo.nombre : "Desconocido";
     };
 
-    // Obtener el nombre del deporte por su ID
     const getDeporteNombre = (id) => {
-        const deporte = deportes.find((d) => d.id === id);
+        const deporte = deportes.find((d) => parseInt(d.id, 10) === parseInt(id, 10));
         return deporte ? deporte.nombre : "Desconocido";
     };
 
-    // Cargar datos de deportes, equipos y eventos
+    useEffect(() => {
+        fetchData();
+    }, []);
+    
     const fetchData = async () => {
         try {
             const respDeportes = await peticion(apiClient, prefijoDeportes);
             setDeportes(respDeportes.data);
-
+    
             const respEquipos = await peticion(apiClient, prefijoEquipos);
             setEquipos(respEquipos.data);
-
+    
             const respEventos = await peticion(apiClient, prefijo);
+            console.log("Eventos recibidos:", respEventos.data); // Agrega este log
             setData(respEventos.data);
             setLoading(false);
         } catch (error) {
@@ -44,20 +46,23 @@ const Eventos = () => {
             setLoading(false);
         }
     };
+    const ajustarFechaLocal = (fechaUTC) => {
+        const fecha = new Date(fechaUTC);
+        return new Date(fecha.getTime() - fecha.getTimezoneOffset() * 60000);
+    };
 
     useEffect(() => {
         fetchData();
     }, []);
 
-
     const handleEdit = (editar) => {
-        console.log("Deporte del evento a editar:", editar.deporte); // Verifica el valor del deporte
         setCurrentData({
             ...editar,
-            fecha: new Date(editar.fecha).toISOString().slice(0, 16), // Mantén la fecha y hora exactas
+            fecha: new Date(editar.fecha).toISOString().slice(0, 16),
+            puntos_equipo1: editar.puntos_equipo1 ?? null,
+            puntos_equipo2: editar.puntos_equipo2 ?? null,
         });
-        setDeporteSeleccionado(String(editar.deporte)); // Asegúrate de que el valor sea una cadena si los IDs son cadenas
-        console.log("Deporte seleccionado al editar:", String(editar.deporte)); // Verifica el valor que se asigna
+        setDeporteSeleccionado(String(editar.deporte));
         setShowModal(true);
     };
 
@@ -67,29 +72,52 @@ const Eventos = () => {
             fecha: "",
             equipo1: "",
             equipo2: "",
-            puntos_equipo1: 0,
-            puntos_equipo2: 0,
+            puntos_equipo1: null,
+            puntos_equipo2: null,
         });
         setDeporteSeleccionado("");
         setShowModal(true);
     };
 
-    // Guardar un evento (crear o actualizar)
     const handleSave = () => {
         if (!currentData.nombre || !currentData.fecha || !deporteSeleccionado) {
             Swal.fire("Campos incompletos", "Por favor completa todos los campos obligatorios.", "warning");
             return;
         }
-
+    
+        if (currentData.equipo1 === currentData.equipo2) {
+            Swal.fire("Error", "Un equipo no puede jugar contra sí mismo.", "error");
+            return;
+        }
+    
+        const equipo1 = equipos.find((e) => e.id === parseInt(currentData.equipo1, 10));
+        const equipo2 = equipos.find((e) => e.id === parseInt(currentData.equipo2, 10));
+        if (equipo1?.deporte !== equipo2?.deporte) {
+            Swal.fire("Error", "Los equipos deben pertenecer al mismo deporte.", "error");
+            return;
+        }
+    
+        let resultado = null;
+        if (currentData.puntos_equipo1 === 0 && currentData.puntos_equipo2 === 0) {
+            resultado = "Empate";
+        } else if (currentData.puntos_equipo1 > currentData.puntos_equipo2) {
+            resultado = `Ganador: ${getEquipoNombre(currentData.equipo1)}`;
+        } else if (currentData.puntos_equipo1 < currentData.puntos_equipo2) {
+            resultado = `Ganador: ${getEquipoNombre(currentData.equipo2)}`;
+        }
+    
         const datosAEnviar = {
             ...currentData,
-            deporte: deporteSeleccionado,
+            deporte: deporteSeleccionado ? parseInt(deporteSeleccionado, 10) : null, // Asegúrate de enviar un ID válido
             equipo1: currentData.equipo1 ? parseInt(currentData.equipo1, 10) : null,
             equipo2: currentData.equipo2 ? parseInt(currentData.equipo2, 10) : null,
-            puntos_equipo1: parseInt(currentData.puntos_equipo1, 10),
-            puntos_equipo2: parseInt(currentData.puntos_equipo2, 10),
+            puntos_equipo1: currentData.puntos_equipo1,
+            puntos_equipo2: currentData.puntos_equipo2,
+            resultado,
         };
-
+    
+        console.log("Datos a enviar:", datosAEnviar); // Agrega este log para depuración
+    
         if (currentData.id) {
             peticion(apiClient, `${prefijo}${currentData.id}/`, "put", datosAEnviar)
                 .then((res) => {
@@ -114,12 +142,12 @@ const Eventos = () => {
                 })
                 .catch((error) => {
                     console.error("Error al crear el evento:", error);
+                    console.log("Detalles del error:", error.response?.data); // Agrega este log para ver el error del backend
                     Swal.fire("Error", "Ocurrió un error al crear el evento.", "error");
                 });
         }
     };
 
-    // Manejar la eliminación de un evento
     const handleDelete = (id) => {
         Swal.fire({
             title: "¿Estás seguro?",
@@ -144,23 +172,25 @@ const Eventos = () => {
         });
     };
 
-    // Manejar cambios en los campos del formulario
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setCurrentData({ ...currentData, [name]: value });
     };
 
-    // Manejar cambios en el selector de deportes
     const handleDeporteChange = (e) => {
         setDeporteSeleccionado(e.target.value);
+        console.log("Deporte seleccionado:", e.target.value); 
     };
 
-    // Filtrar equipos según el deporte seleccionado
     const equiposFiltrados = equipos.filter((equipo) => parseInt(equipo.deporte, 10) === parseInt(deporteSeleccionado, 10));
 
-    // Separar eventos en "Próximos" y "Finalizados"
-    const eventosProximos = data.filter((evento) => !evento.puntos_equipo1 && !evento.puntos_equipo2);
-    const eventosFinalizados = data.filter((evento) => evento.puntos_equipo1 || evento.puntos_equipo2);
+    const eventosProximos = data.filter(
+        (evento) => evento.puntos_equipo1 === null && evento.puntos_equipo2 === null
+    );
+
+    const eventosFinalizados = data.filter(
+        (evento) => evento.puntos_equipo1 !== null && evento.puntos_equipo2 !== null
+    );
 
     return (
         <div className="container py-5" style={{ backgroundColor: "#e6f0ff" }}>
@@ -178,7 +208,6 @@ const Eventos = () => {
                 </div>
             ) : (
                 <>
-                    {/* Próximos Eventos */}
                     <section className="mb-5">
                         <h4 className="text-center mb-3">Próximos Eventos</h4>
                         <hr className="mb-4" />
@@ -193,12 +222,12 @@ const Eventos = () => {
                                                     {getEquipoNombre(evento.equipo1)} <span className="text-muted">vs</span>{" "}
                                                     {getEquipoNombre(evento.equipo2)}
                                                 </h5>
-                                                <p className="fw-medium text-muted">Deporte: {getDeporteNombre(evento.deporte)}</p>
+                                                <p className="fw-medium text-muted">Deporte: {evento.deporte_nombre || "Desconocido"}</p>
                                                 <p className="mb-1 text-primary fw-semibold">
-                                                    🕖 {new Date(evento.fecha).toLocaleTimeString()}
+                                                    🕖 {ajustarFechaLocal(evento.fecha).toLocaleTimeString()}
                                                 </p>
                                                 <p className="fw-medium">
-                                                    📅 {new Date(evento.fecha).toLocaleDateString()}
+                                                    📅 {ajustarFechaLocal(evento.fecha).toLocaleDateString()}
                                                 </p>
                                             </div>
                                             <div className="card-footer d-flex justify-content-between">
@@ -224,7 +253,6 @@ const Eventos = () => {
                         </div>
                     </section>
 
-                    {/* Eventos Finalizados */}
                     <section>
                         <h4 className="text-center mb-3">Eventos Finalizados</h4>
                         <hr className="mb-4" />
@@ -237,25 +265,23 @@ const Eventos = () => {
                                                 <h5 className="fw-semibold mb-3">{evento.nombre}</h5>
                                                 <h5 className="fw-semibold mb-3">
                                                     <span
-                                                        className={`${
-                                                            evento.puntos_equipo1 > evento.puntos_equipo2
-                                                                ? "text-success"
-                                                                : evento.puntos_equipo1 < evento.puntos_equipo2
+                                                        className={`${evento.puntos_equipo1 > evento.puntos_equipo2
+                                                            ? "text-success"
+                                                            : evento.puntos_equipo1 < evento.puntos_equipo2
                                                                 ? "text-danger"
                                                                 : "text-secondary"
-                                                        }`}
+                                                            }`}
                                                     >
                                                         {getEquipoNombre(evento.equipo1)}
                                                     </span>{" "}
                                                     <span className="text-muted">vs</span>{" "}
                                                     <span
-                                                        className={`${
-                                                            evento.puntos_equipo2 > evento.puntos_equipo1
-                                                                ? "text-success"
-                                                                : evento.puntos_equipo2 < evento.puntos_equipo1
+                                                        className={`${evento.puntos_equipo2 > evento.puntos_equipo1
+                                                            ? "text-success"
+                                                            : evento.puntos_equipo2 < evento.puntos_equipo1
                                                                 ? "text-danger"
                                                                 : "text-secondary"
-                                                        }`}
+                                                            }`}
                                                     >
                                                         {getEquipoNombre(evento.equipo2)}
                                                     </span>
@@ -288,7 +314,6 @@ const Eventos = () => {
                 </>
             )}
 
-            {/* Modal */}
             {showModal && (
                 <div className="modal d-block" tabIndex="-1" role="dialog">
                     <div className="modal-dialog" role="document">
@@ -320,8 +345,8 @@ const Eventos = () => {
                                         <label>Deporte <span className="text-danger">*</span></label>
                                         <select
                                             className="form-control"
-                                            value={deporteSeleccionado} // Vincula el estado al valor del select
-                                            onChange={handleDeporteChange} // Actualiza el estado cuando el usuario cambia el deporte
+                                            value={deporteSeleccionado}
+                                            onChange={handleDeporteChange}
                                             required
                                         >
                                             <option value="">Selecciona un deporte</option>
@@ -377,36 +402,40 @@ const Eventos = () => {
                                             required
                                         />
                                     </div>
-                                    <div className="form-group mb-3">
-                                        <label>Puntos Equipo 1</label>
-                                        <input
-                                            type="number"
-                                            className="form-control"
-                                            name="puntos_equipo1"
-                                            value={currentData?.puntos_equipo1 || ""}
-                                            onChange={(e) =>
-                                                setCurrentData({
-                                                    ...currentData,
-                                                    puntos_equipo1: e.target.value === "" ? 0 : parseInt(e.target.value, 10),
-                                                })
-                                            }
-                                        />
-                                    </div>
-                                    <div className="form-group mb-3">
-                                        <label>Puntos Equipo 2</label>
-                                        <input
-                                            type="number"
-                                            className="form-control"
-                                            name="puntos_equipo2"
-                                            value={currentData?.puntos_equipo2 || ""}
-                                            onChange={(e) =>
-                                                setCurrentData({
-                                                    ...currentData,
-                                                    puntos_equipo2: e.target.value === "" ? 0 : parseInt(e.target.value, 10),
-                                                })
-                                            }
-                                        />
-                                    </div>
+                                    {currentData?.id && new Date() > new Date(currentData.fecha) && (
+                                        <>
+                                            <div className="form-group mb-3">
+                                                <label>Puntos Equipo 1</label>
+                                                <input
+                                                    type="number"
+                                                    className="form-control"
+                                                    name="puntos_equipo1"
+                                                    value={currentData?.puntos_equipo1 ?? ""}
+                                                    onChange={(e) =>
+                                                        setCurrentData({
+                                                            ...currentData,
+                                                            puntos_equipo1: e.target.value === "" ? null : parseInt(e.target.value, 10),
+                                                        })
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="form-group mb-3">
+                                                <label>Puntos Equipo 2</label>
+                                                <input
+                                                    type="number"
+                                                    className="form-control"
+                                                    name="puntos_equipo2"
+                                                    value={currentData?.puntos_equipo2 ?? ""}
+                                                    onChange={(e) =>
+                                                        setCurrentData({
+                                                            ...currentData,
+                                                            puntos_equipo2: e.target.value === "" ? null : parseInt(e.target.value, 10),
+                                                        })
+                                                    }
+                                                />
+                                            </div>
+                                        </>
+                                    )}
                                 </form>
                             </div>
                             <div className="modal-footer">
