@@ -17,7 +17,6 @@ function AdminDashboard() {
       case 'Posiciones': return <Posiciones />;
       case 'Eventos': return <Eventos />;
       //case 'Equipos': return <Equipos />;
-      case 'Eventos' : return <Eventos />;
     }
   };
   const menuItems = [
