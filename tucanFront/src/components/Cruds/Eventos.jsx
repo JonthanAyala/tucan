@@ -13,7 +13,7 @@ const Eventos = () => {
     const prefijo = "/eventos/api/";
     const prefijoEquipos = "/equipos/api/";
     const prefijoDeportes = "/deportes/api/";
-
+    
     const getEquipoNombre = (id) => {
         const equipo = equipos.find((e) => e.id === id);
         return equipo ? equipo.nombre : "Desconocido";
@@ -37,7 +37,7 @@ const Eventos = () => {
             setEquipos(respEquipos.data);
     
             const respEventos = await peticion(apiClient, prefijo);
-            console.log("Eventos recibidos:", respEventos.data); // Agrega este log
+            console.log("Eventos recibidos:", respEventos.data); 
             setData(respEventos.data);
             setLoading(false);
         } catch (error) {
@@ -248,69 +248,85 @@ const Eventos = () => {
                                     </div>
                                 ))
                             ) : (
-                                <p className="text-center text-muted">No hay próximos eventos</p>
-                            )}
-                        </div>
-                    </section>
+                                    <p className="text-center text-muted">No hay próximos eventos</p>
+                                )}
+                            </div>
+                        </section>
 
-                    <section>
-                        <h4 className="text-center mb-3">Eventos Finalizados</h4>
-                        <hr className="mb-4" />
-                        <div className="row justify-content-center">
-                            {eventosFinalizados.length > 0 ? (
-                                eventosFinalizados.map((evento, i) => (
-                                    <div className="col-md-3 mb-4" key={i}>
-                                        <div className="card shadow-sm border-0 rounded-4 h-100">
-                                            <div className="card-body text-center">
-                                                <h5 className="fw-semibold mb-3">{evento.nombre}</h5>
-                                                <h5 className="fw-semibold mb-3">
-                                                    <span
-                                                        className={`${evento.puntos_equipo1 > evento.puntos_equipo2
-                                                            ? "text-success"
-                                                            : evento.puntos_equipo1 < evento.puntos_equipo2
-                                                                ? "text-danger"
-                                                                : "text-secondary"
-                                                            }`}
-                                                    >
-                                                        {getEquipoNombre(evento.equipo1)}
-                                                    </span>{" "}
-                                                    <span className="text-muted">vs</span>{" "}
-                                                    <span
-                                                        className={`${evento.puntos_equipo2 > evento.puntos_equipo1
-                                                            ? "text-success"
-                                                            : evento.puntos_equipo2 < evento.puntos_equipo1
-                                                                ? "text-danger"
-                                                                : "text-secondary"
-                                                            }`}
-                                                    >
-                                                        {getEquipoNombre(evento.equipo2)}
-                                                    </span>
-                                                </h5>
-                                                <p className="fw-medium text-muted">Deporte: {getDeporteNombre(evento.deporte)}</p>
-                                                <p className="text-muted mb-0">📅 Fecha del partido:</p>
-                                                <p className="fw-medium">{new Date(evento.fecha).toLocaleDateString()}</p>
-                                                <p className="fw-medium">Puntos {getEquipoNombre(evento.equipo1)}: {evento.puntos_equipo1}</p>
-                                                <p className="fw-medium">Puntos {getEquipoNombre(evento.equipo2)}: {evento.puntos_equipo2}</p>
-                                                <p className="fw-bold">
-                                                    {evento.resultado ? `${evento.resultado}` : "Resultado no disponible"}
-                                                </p>
+                        <section>
+                            <h4 className="text-center mb-3">Eventos Finalizados</h4>
+                            <hr className="mb-4" />
+                            <div className="row justify-content-center">
+                                {eventosFinalizados.length > 0 ? (
+                                    eventosFinalizados.map((evento, i) => {
+                                        const fechaEvento = new Date(evento.fecha);
+                                        const fechaLimiteEdicion = new Date(fechaEvento);
+                                        fechaLimiteEdicion.setDate(fechaEvento.getDate() + 6);
+
+                                        const puedeEditar = new Date() <= fechaLimiteEdicion;
+
+                                        return (
+                                            <div className="col-md-3 mb-4" key={i}>
+                                                <div className="card shadow-sm border-0 rounded-4 h-100">
+                                                    <div className="card-body text-center">
+                                                        <h5 className="fw-semibold mb-3">{evento.nombre}</h5>
+                                                        <h5 className="fw-semibold mb-3">
+                                                            <span
+                                                                className={`${evento.puntos_equipo1 > evento.puntos_equipo2
+                                                                    ? "text-success"
+                                                                    : evento.puntos_equipo1 < evento.puntos_equipo2
+                                                                        ? "text-danger"
+                                                                        : "text-secondary"
+                                                                    }`}
+                                                            >
+                                                                {getEquipoNombre(evento.equipo1)}
+                                                            </span>{" "}
+                                                            <span className="text-muted">vs</span>{" "}
+                                                            <span
+                                                                className={`${evento.puntos_equipo2 > evento.puntos_equipo1
+                                                                    ? "text-success"
+                                                                    : evento.puntos_equipo2 < evento.puntos_equipo1
+                                                                        ? "text-danger"
+                                                                        : "text-secondary"
+                                                                    }`}
+                                                            >
+                                                                {getEquipoNombre(evento.equipo2)}
+                                                            </span>
+                                                        </h5>
+                                                        <p className="fw-medium text-muted">Deporte: {getDeporteNombre(evento.deporte)}</p>
+                                                        <p className="text-muted mb-0">📅 Fecha del partido:</p>
+                                                        <p className="fw-medium">{new Date(evento.fecha).toLocaleDateString()}</p>
+                                                        <p className="fw-medium">Puntos {getEquipoNombre(evento.equipo1)}: {evento.puntos_equipo1}</p>
+                                                        <p className="fw-medium">Puntos {getEquipoNombre(evento.equipo2)}: {evento.puntos_equipo2}</p>
+                                                        <p className="fw-bold">
+                                                            {evento.resultado ? `${evento.resultado}` : "Resultado no disponible"}
+                                                        </p>
+                                                    </div>
+                                                    <div className="card-footer d-flex justify-content-between">
+                                                        <button
+                                                            className="btn btn-danger btn-sm"
+                                                            onClick={() => handleDelete(evento.id)}
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                        {puedeEditar && (
+                                                            <button
+                                                                className="btn btn-dark btn-sm"
+                                                                onClick={() => handleEdit(evento)}
+                                                            >
+                                                                ✏️
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="card-footer d-flex justify-content-between">
-                                                <button
-                                                    className="btn btn-danger btn-sm"
-                                                    onClick={() => handleDelete(evento.id)}
-                                                >
-                                                    🗑️
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="text-center text-muted">No hay eventos finalizados</p>
-                            )}
-                        </div>
-                    </section>
+                                        );
+                                    })
+                                ) : (
+                                    <p className="text-center text-muted">No hay eventos finalizados</p>
+                                )}
+                            </div>
+                        </section>
                 </>
             )}
 
@@ -400,6 +416,7 @@ const Eventos = () => {
                                             value={currentData?.fecha || ""}
                                             onChange={handleInputChange}
                                             required
+                                            disabled={currentData?.id && currentData.puntos_equipo1 !== null && currentData.puntos_equipo2 !== null}
                                         />
                                     </div>
                                     {currentData?.id && new Date() > new Date(currentData.fecha) && (
