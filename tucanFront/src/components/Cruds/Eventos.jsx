@@ -37,7 +37,7 @@ const Eventos = () => {
             setEquipos(respEquipos.data);
     
             const respEventos = await peticion(apiClient, prefijo);
-            console.log("Eventos recibidos:", respEventos.data); // Agrega este log
+            console.log("Eventos recibidos:", respEventos.data); 
             setData(respEventos.data);
             setLoading(false);
         } catch (error) {
