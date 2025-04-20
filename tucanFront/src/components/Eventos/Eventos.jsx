@@ -68,18 +68,22 @@ const EventosVista = () => {
                 </div>
             ) : (
                 <>
+                    {/* Próximos Eventos */}
                     <section className="mb-5">
                         <h4 className="text-center mb-3">Próximos Eventos</h4>
                         <hr className="mb-4" />
                         <div className="row justify-content-center">
                             {eventosProximos.length > 0 ? (
                                 eventosProximos.map((evento, i) => (
-                                    <div className="col-md-3 mb-4" key={i}>
+                                    <div className="col-md-4 mb-4" key={i}>
                                         <div className="card shadow-sm border-0 rounded-4 h-100">
+                                            <div className="card-header text-center bg-primary text-white fw-bold">
+                                                {evento.nombre}
+                                            </div>
                                             <div className="card-body text-center">
-                                                <h5 className="fw-semibold mb-3">{evento.nombre}</h5>
                                                 <h5 className="fw-semibold mb-3">
-                                                    {getEquipoNombre(evento.equipo1)} <span className="text-muted">vs</span>{" "}
+                                                    {getEquipoNombre(evento.equipo1)}
+                                                    <span className="text-muted mx-2">vs</span>
                                                     {getEquipoNombre(evento.equipo2)}
                                                 </h5>
                                                 <p className="fw-medium text-muted">Deporte: {evento.deporte_nombre || "Desconocido"}</p>
@@ -99,51 +103,59 @@ const EventosVista = () => {
                         </div>
                     </section>
 
+                    {/* Eventos Finalizados */}
                     <section>
                         <h4 className="text-center mb-3">Eventos Finalizados</h4>
                         <hr className="mb-4" />
                         <div className="row justify-content-center">
                             {eventosFinalizados.length > 0 ? (
-                                eventosFinalizados.map((evento, i) => (
-                                    <div className="col-md-3 mb-4" key={i}>
-                                        <div className="card shadow-sm border-0 rounded-4 h-100">
-                                            <div className="card-body text-center">
-                                                <h5 className="fw-semibold mb-3">{evento.nombre}</h5>
-                                                <h5 className="fw-semibold mb-3">
-                                                    <span
-                                                        className={`${evento.puntos_equipo1 > evento.puntos_equipo2
-                                                            ? "text-success"
-                                                            : evento.puntos_equipo1 < evento.puntos_equipo2
-                                                                ? "text-danger"
-                                                                : "text-secondary"
-                                                            }`}
-                                                    >
-                                                        {getEquipoNombre(evento.equipo1)}
-                                                    </span>{" "}
-                                                    <span className="text-muted">vs</span>{" "}
-                                                    <span
-                                                        className={`${evento.puntos_equipo2 > evento.puntos_equipo1
-                                                            ? "text-success"
-                                                            : evento.puntos_equipo2 < evento.puntos_equipo1
-                                                                ? "text-danger"
-                                                                : "text-secondary"
-                                                            }`}
-                                                    >
-                                                        {getEquipoNombre(evento.equipo2)}
-                                                    </span>
-                                                </h5>
-                                                <p className="fw-medium text-muted">Deporte: {getDeporteNombre(evento.deporte)}</p>
-                                                <p className="text-muted mb-0">📅 Fecha del partido:</p>
-                                                <p className="fw-medium">{new Date(evento.fecha).toLocaleDateString()}</p>
-                                                <p className="fw-medium">Puntos {getEquipoNombre(evento.equipo1)}: {evento.puntos_equipo1}</p>
-                                                <p className="fw-medium">Puntos {getEquipoNombre(evento.equipo2)}: {evento.puntos_equipo2}</p>
-                                                <p className="fw-bold">
-                                                    {evento.resultado ? `${evento.resultado}` : "Resultado no disponible"}
-                                                </p>
+                                eventosFinalizados.map((evento, i) => {
+                                    const headerClass =
+                                        evento.resultado === "Empate"
+                                            ? "bg-secondary text-white"
+                                            : "bg-success text-white";
+
+                                    return (
+                                        <div className="col-md-4 mb-4" key={i}>
+                                            <div className="card shadow-sm border-0 rounded-4 h-100">
+                                                <div className={`card-header text-center fw-bold ${headerClass}`}>
+                                                    {evento.resultado || "Resultado no disponible"}
+                                                </div>
+                                                <div className="card-body text-center">
+                                                    <h5 className="fw-bold mb-3">{evento.nombre}</h5>
+                                                    <h6 className="fw-semibold mb-3">
+                                                        <span
+                                                            className={`${evento.puntos_equipo1 > evento.puntos_equipo2
+                                                                    ? "text-success"
+                                                                    : evento.puntos_equipo1 < evento.puntos_equipo2
+                                                                        ? "text-danger"
+                                                                        : "text-secondary"
+                                                                }`}
+                                                        >
+                                                            {getEquipoNombre(evento.equipo1)}
+                                                        </span>
+                                                        <span className="text-muted mx-2">vs</span>
+                                                        <span
+                                                            className={`${evento.puntos_equipo2 > evento.puntos_equipo1
+                                                                    ? "text-success"
+                                                                    : evento.puntos_equipo2 < evento.puntos_equipo1
+                                                                        ? "text-danger"
+                                                                        : "text-secondary"
+                                                                }`}
+                                                        >
+                                                            {getEquipoNombre(evento.equipo2)}
+                                                        </span>
+                                                    </h6>
+                                                    <p className="fw-medium text-muted">Deporte: {getDeporteNombre(evento.deporte)}</p>
+                                                    <p className="text-muted mb-0">📅 Fecha del partido:</p>
+                                                    <p className="fw-medium">{new Date(evento.fecha).toLocaleDateString()}</p>
+                                                    <p className="fw-medium">Puntos {getEquipoNombre(evento.equipo1)}: {evento.puntos_equipo1}</p>
+                                                    <p className="fw-medium">Puntos {getEquipoNombre(evento.equipo2)}: {evento.puntos_equipo2}</p>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             ) : (
                                 <p className="text-center text-muted">No hay eventos finalizados</p>
                             )}

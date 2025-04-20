@@ -1,20 +1,19 @@
-import { useState } from 'react';
+import { act, useEffect, useState } from 'react';
 import Sidebar from "./Sidebar";
 import Usuarios from "./Cruds/Usuarios";
-import Deportes from "./Cruds/Deportes";
-import Posiciones from './Cruds/Posiciones';
+import Deportes from "./Cruds/Deportes";;
 import Eventos from './Cruds/Eventos';
+import DeporteDetalles from './Cruds/DeporteDetalles';
 // import Eventos from "./Cruds/Eventos";
 
 
 function AdminDashboard() {
-  const [activeComponent, setActiveComponent] = useState('Usuarios');
-
+  const [activeComponent, setActiveComponent] = useState({ name: null , params: null });
   const renderComponent = () => {
-    switch(activeComponent) {
+    switch(activeComponent.name) {
       case 'Usuarios': return <Usuarios />;
-      case 'Deportes': return <Deportes />;
-      case 'Posiciones': return <Posiciones />;
+      case 'Deportes': return <Deportes onNavigate={(component, params) => setActiveComponent({ name: component, params })} />;
+      case 'Posiciones': return<DeporteDetalles  id={activeComponent.params?.id} />;
       case 'Eventos': return <Eventos />;
       //case 'Equipos': return <Equipos />;
     }
@@ -32,8 +31,8 @@ function AdminDashboard() {
   return (
       <div className="d-flex flex-grow-1 overflow-hidden">
         <Sidebar
-          onSelectComponent={setActiveComponent} 
-          activeComponent={activeComponent}
+          onSelectComponent={(component) => setActiveComponent({ name: component, params: null })}
+          activeComponent={activeComponent.name}
           menuItems={menuItems}
         />
         
