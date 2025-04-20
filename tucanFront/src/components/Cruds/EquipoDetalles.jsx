@@ -13,7 +13,7 @@ const EquipoDetalle = ({ id }) => {
   const [logoPreview, setLogoPreview] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
   const [eventos, setEventos] = useState([]);
-   const currentUserId = localStorage.getItem("id");
+  const currentUserId = localStorage.getItem("id");
   const [posiciones, setPosiciones] = useState([]);
   const navigate = useNavigate();
 
@@ -52,8 +52,23 @@ const EquipoDetalle = ({ id }) => {
         setJugadores(jugadoresConPosicion);
 
         const resEventos = await peticion(apiClient, `/eventos/equipo/${id}/`);
+        const eventos = resEventos.data.eventos;
 
-        setEventos(resEventos.data.eventos);
+        // Obtener nombres de los equipos para cada evento
+        const eventosConNombres = await Promise.all(
+          eventos.map(async (evento) => {
+            const equipo1Res = await peticion(apiClient, `/equipos/api/${evento.equipo1}/`);
+            const equipo2Res = await peticion(apiClient, `/equipos/api/${evento.equipo2}/`);
+            return {
+              ...evento,
+              equipo1_nombre: equipo1Res.data.nombre,
+              equipo2_nombre: equipo2Res.data.nombre,
+            };
+          })
+        );
+
+        setEventos(eventosConNombres);
+
       } catch (error) {
         console.error("Error al cargar los datos:", error);
         Swal.fire("Error", "No se pudo cargar la información del equipo", "error");
@@ -65,6 +80,18 @@ const EquipoDetalle = ({ id }) => {
       cargarDatos();
     }
   }, [id, navigate]);
+
+  const actualizarEventos = (equipoActualizado) => {
+    const eventosActualizados = eventos.map((evento) => {
+      if (evento.equipo1 === equipoActualizado.id) {
+        return { ...evento, equipo1_nombre: equipoActualizado.nombre };
+      } else if (evento.equipo2 === equipoActualizado.id) {
+        return { ...evento, equipo2_nombre: equipoActualizado.nombre };
+      }
+      return evento;
+    });
+    setEventos(eventosActualizados);
+  };
 
   const handleEdit = () => {
     setEditableEquipo(equipo);
@@ -94,24 +121,23 @@ const EquipoDetalle = ({ id }) => {
       );
       return;
     }
-  
+
     try {
       const formData = new FormData();
       formData.append("nombre", editableEquipo.nombre);
       formData.append("descripcion", editableEquipo.descripcion || "");
       formData.append("ciudad", editableEquipo.ciudad || "");
       formData.append("deporte", editableEquipo.deporte);
-      formData.append("entrenador", currentUserId); 
+      formData.append("entrenador", currentUserId);
       formData.append("num_titulares", editableEquipo.num_titulares || 0);
       formData.append("num_suplentes", editableEquipo.num_suplentes || 0);
-  
 
       if (logoFile) {
         formData.append("logo", logoFile);
       }
-  
+
       const headers = { "Content-Type": "multipart/form-data" };
-  
+
       if (editableEquipo.id) {
         const res = await peticion(
           apiClient,
@@ -120,23 +146,17 @@ const EquipoDetalle = ({ id }) => {
           formData,
           headers
         );
-  
+
         const equipoActualizado = { ...res.data };
         const deporte = deportes.find(
           (d) => Number(d.id) === Number(equipoActualizado.deporte)
         );
         equipoActualizado.deporte_nombre = deporte ? deporte.nombre : "Desconocido";
-  
+
         setEquipo(equipoActualizado);
+        actualizarEventos(equipoActualizado);
         setShowModal(false);
         Swal.fire("Actualizado", "Equipo actualizado con éxito.", "success");
-      } else {
-        // Crear un nuevo equipo
-        const res = await peticion(apiClient, `/equipos/api/`, "post", formData, headers);
-  
-        setEquipo(res.data);
-        setShowModal(false);
-        Swal.fire("Creado", "Equipo creado con éxito.", "success");
       }
     } catch (error) {
       console.error("Error al guardar el equipo:", error);
@@ -201,34 +221,77 @@ const EquipoDetalle = ({ id }) => {
                   </div>
                 </div>
               </div>
+
               <div className="col-12 col-xxl-3 d-flex">
-                <div className="card h-100 p-2 p-lg-3 shadow-sm w-100 d-flex flex-column">
-                  <div className="card-header bg-light py-2 py-lg-3">
-                    <h4 className="text-center mb-0 fs-5 fs-lg-4">Partidos</h4>
-                  </div>
-                  <div className="card-body p-1 p-lg-3">
-                    {eventos.length === 0 ? (
-                      <p className="text-muted text-center my-2 my-lg-3">No hay eventos registrados</p>
-                    ) : (
-                      <ul className="list-group list-group-flush">
-                        {eventos.map((evento) => (
-                          <li key={evento.id} className="list-group-item d-flex justify-content-between align-items-center py-2">
-                            <div className="text-truncate">
-                              <strong className="d-block text-truncate">{evento.nombre}</strong>
-                              <small className="text-muted d-block">
-                                Fecha: {new Date(evento.fecha).toLocaleDateString()}
-                              </small>
-                            </div>
-                            <span className={`badge rounded-pill ms-2 ${evento.resultado ? "bg-secondary" : "bg-primary"}`}>
-                              {evento.resultado || "Pendiente"}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </div>
+  <div className="card p-2 p-lg-3 shadow-sm w-100 d-flex flex-column" style={{
+    height: "500px" // Altura fija como en la card de Jugadores
+  }}>
+    <div className="card-header bg-light py-2 py-lg-3">
+      <h4 className="text-center mb-0 fs-5 fs-lg-4">Partidos</h4>
+    </div>
+    <div className="card-body p-1 p-lg-2" style={{
+      overflowY: "auto", // Habilitar scroll vertical
+      flex: "1 1 auto"   // Permitir que el contenido ocupe el espacio restante
+    }}>
+      {eventos.length === 0 ? (
+        <p className="text-muted text-center my-2 my-lg-3">No hay eventos registrados</p>
+      ) : (
+        <ul className="list-group list-group-flush">
+          {eventos.map((evento) => (
+            <li
+              key={evento.id}
+              className="list-group-item d-flex justify-content-between align-items-center py-2"
+              style={{ cursor: "pointer" }}
+              onClick={() =>
+                Swal.fire({
+                  title: `${evento.nombre}`,
+                  html: `<strong>${equipo.id === evento.equipo1 ? evento.equipo1_nombre : evento.equipo2_nombre} vs ${equipo.id === evento.equipo1 ? evento.equipo2_nombre : evento.equipo1_nombre}</strong><br/>Deporte: ${equipo.deporte_nombre}<br/>Fecha: ${new Date(evento.fecha).toLocaleDateString()}<br/>Resultado: ${evento.resultado_equipo || "Pendiente"}<br/>${
+                    evento.puntos_equipo1 != null && evento.puntos_equipo2 != null
+                      ? `Puntos: ${
+                          equipo.id === evento.equipo1
+                            ? `${evento.puntos_equipo1} - ${evento.puntos_equipo2}`
+                            : `${evento.puntos_equipo2} - ${evento.puntos_equipo1}`
+                        }<br/>`
+                      : ""
+                  }`,
+                  icon: "info",
+                  confirmButtonText: "Cerrar",
+                })
+              }
+            >
+              <div className="text-truncate">
+                <strong className="d-block text-truncate">
+                  {equipo.id === evento.equipo1
+                    ? `${evento.equipo1_nombre} vs ${evento.equipo2_nombre}`
+                    : `${evento.equipo2_nombre} vs ${evento.equipo1_nombre}`}
+                </strong>
+                <small className="text-muted d-block">
+                  {new Date(evento.fecha) > new Date()
+                    ? `Fecha: ${new Date(evento.fecha).toLocaleDateString()}`
+                    : evento.resultado_equipo || "pene"}
+                </small>
               </div>
+              <span
+                className={`badge rounded-pill ms-2 ${new Date(evento.fecha) > new Date()
+                    ? "bg-warning"
+                    : evento.resultado
+                      ? "bg-secondary"
+                      : "bg-primary"
+                  }`}
+              >
+                {new Date(evento.fecha) > new Date()
+                  ? "Próximo"
+                  : equipo.id === evento.equipo1
+                    ? `${evento.puntos_equipo1} - ${evento.puntos_equipo2}`
+                    : `${evento.puntos_equipo2} - ${evento.puntos_equipo1}` || "Pendiente"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  </div>
+</div>
               <div className="col-12 col-xxl-4 d-flex">
                 <div className="card h-100 p-2 p-lg-3 shadow-sm w-100 d-flex flex-column">
                   <div className="card-header bg-light py-2 py-lg-3">
@@ -267,7 +330,7 @@ const EquipoDetalle = ({ id }) => {
               </div>
             </div>
 
-                        {showModal && (
+            {showModal && (
               <div className="modal d-block bg-dark bg-opacity-50" tabIndex="-1" role="dialog">
                 <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
                   <div className="modal-content rounded-4">
@@ -341,7 +404,7 @@ const EquipoDetalle = ({ id }) => {
                             name="deporte"
                             value={editableEquipo.deporte || ""}
                             onChange={handleInputChange}
-                            disabled={jugadores.length > 0} 
+                            disabled={jugadores.length > 0}
                           >
                             <option value="">Selecciona un deporte</option>
                             {deportes.map((deporte) => (

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import apiClient, { peticion } from "../../config/apiClient";
 
-const Equipos = ({onNavigate}) => {
+const Equipos = ({ onNavigate }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -88,7 +88,7 @@ const Equipos = ({onNavigate}) => {
       );
       return;
     }
-    
+
     const formData = new FormData();
     formData.append("nombre", currentData.nombre);
     formData.append("descripcion", currentData.descripcion || "");
@@ -193,23 +193,28 @@ const Equipos = ({onNavigate}) => {
       </div>
 
       {showModal && (
-        <div className="modal d-block" tabIndex="-1" role="dialog">
-          <div className="modal-dialog" role="document">
-            <div className="modal-content">
+        <div className="modal d-block bg-dark bg-opacity-50" tabIndex="-1" role="dialog">
+          <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div className="modal-content rounded-4">
               <div className="modal-header">
-                <h5>{currentData.id ? "Editar Equipo" : "Crear Equipo"}</h5>
+                <h5 className="modal-title">
+                  {currentData.id ? "Editar Equipo" : "Crear Equipo"}
+                </h5>
                 <button
                   type="button"
-                  className="close"
-                  onClick={() => setShowModal(false)}
-                >
-                  <span>&times;</span>
-                </button>
+                  className="btn-close"
+                  onClick={() => {
+                    setShowModal(false);
+                    setCurrentData({});
+                    setLogoFile(null);
+                    setLogoPreview(null);
+                  }}
+                ></button>
               </div>
               <div className="modal-body">
-                <form>
-                  <div className="form-group">
-                    <label>Nombre</label>
+                <form className="row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label">Nombre</label>
                     <input
                       type="text"
                       className="form-control"
@@ -218,9 +223,8 @@ const Equipos = ({onNavigate}) => {
                       onChange={handleInputChange}
                     />
                   </div>
-
-                  <div className="form-group">
-                    <label>Logo (imagen)</label>
+                  <div className="col-md-6">
+                    <label className="form-label">Logo (imagen)</label>
                     <input
                       type="file"
                       className="form-control"
@@ -228,28 +232,27 @@ const Equipos = ({onNavigate}) => {
                       onChange={handleFileChange}
                     />
                   </div>
-
-                  {logoPreview && (
+                  {(logoPreview || currentData.logo) && (
                     <div className="text-center my-2">
                       <img
-                        src={logoPreview}
+                        src={logoPreview || currentData.logo}
                         alt="Vista previa"
                         style={{ maxHeight: "150px", objectFit: "contain" }}
                       />
                     </div>
                   )}
-
-                  <div className="form-group">
-                    <label>Descripción</label>
+                  <div className="col-md-12">
+                    <label className="form-label">Descripción</label>
                     <textarea
                       className="form-control"
                       name="descripcion"
+                      rows="3"
                       value={currentData.descripcion || ""}
                       onChange={handleInputChange}
-                    />
+                    ></textarea>
                   </div>
-                  <div className="form-group">
-                    <label>Ciudad</label>
+                  <div className="col-md-6">
+                    <label className="form-label">Ciudad</label>
                     <input
                       type="text"
                       className="form-control"
@@ -258,16 +261,10 @@ const Equipos = ({onNavigate}) => {
                       onChange={handleInputChange}
                     />
                   </div>
-                  <input
-                    type="hidden"
-                    name="entrenador"
-                    value={currentUserId || ""}
-                    onChange={handleInputChange}
-                  />
-                  <div className="form-group">
-                    <label>Deporte</label>
+                  <div className="col-md-6">
+                    <label className="form-label">Deporte</label>
                     <select
-                      className="form-control"
+                      className="form-select"
                       name="deporte"
                       value={currentData.deporte || ""}
                       onChange={handleInputChange}
@@ -280,8 +277,8 @@ const Equipos = ({onNavigate}) => {
                       ))}
                     </select>
                   </div>
-                  <div className="form-group">
-                    <label>Número de Titulares</label>
+                  <div className="col-md-6">
+                    <label className="form-label">Número de Titulares</label>
                     <input
                       type="number"
                       className="form-control"
@@ -290,8 +287,8 @@ const Equipos = ({onNavigate}) => {
                       onChange={handleInputChange}
                     />
                   </div>
-                  <div className="form-group">
-                    <label>Número de Suplentes</label>
+                  <div className="col-md-6">
+                    <label className="form-label">Número de Suplentes</label>
                     <input
                       type="number"
                       className="form-control"
