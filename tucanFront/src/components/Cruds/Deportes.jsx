@@ -6,13 +6,17 @@ import apiClient, { peticion } from "../../config/apiClient";
 
 const MySwal = withReactContent(Swal);
 
-const Deportes = () => {
+const Deportes = ({ onNavigate }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [currentData, setCurrentData] = useState({ deporte: {} });
   const navi = useNavigate();
   const prefijo = "/config_deporte/api/";
+
+  const handleViewDetails = (deporte) => {
+    onNavigate("Posiciones", { id: deporte.deporte.id });
+  };
 
   const fetchData = async () => {
     try {
@@ -57,7 +61,11 @@ const Deportes = () => {
         MySwal.fire("Eliminado", "El deporte ha sido eliminado.", "success");
       } catch (error) {
         console.error("Error al eliminar el equipo:", error);
-        MySwal.fire("Error", "Ocurrió un error al eliminar el deporte.", "error");
+        MySwal.fire(
+          "Error",
+          "Ocurrió un error al eliminar el deporte.",
+          "error"
+        );
       }
     }
   };
@@ -74,7 +82,12 @@ const Deportes = () => {
 
     try {
       const res = isEdit
-        ? await peticion(apiClient, `${prefijo}${currentData.deporte.id}/`, "put", payload)
+        ? await peticion(
+            apiClient,
+            `${prefijo}${currentData.deporte.id}/`,
+            "put",
+            payload
+          )
         : await peticion(apiClient, prefijo, "post", payload);
 
       setData((prevData) =>
@@ -85,7 +98,11 @@ const Deportes = () => {
           : [...prevData, res.data]
       );
 
-      MySwal.fire("Éxito", isEdit ? "Deporte actualizado." : "Deporte creado.", "success");
+      MySwal.fire(
+        "Éxito",
+        isEdit ? "Deporte actualizado." : "Deporte creado.",
+        "success"
+      );
       setShowModal(false);
     } catch (error) {
       console.error("Error al guardar:", error);
@@ -109,14 +126,24 @@ const Deportes = () => {
               <div className="card h-100 shadow-sm">
                 <div className="card-body">
                   <h5 className="card-title">{config.deporte.nombre}</h5>
-                  <p><strong>Máx. Titulares:</strong> {config.max_titulares}</p>
-                  <p><strong>Máx. Suplentes:</strong> {config.max_suplentes}</p>
+                  <p>
+                    <strong>Máx. Titulares:</strong> {config.max_titulares}
+                  </p>
+                  <p>
+                    <strong>Máx. Suplentes:</strong> {config.max_suplentes}
+                  </p>
                 </div>
                 <div className="card-footer d-flex justify-content-between">
-                  <button className="btn btn-success btn-sm" onClick={() => handleEdit(config)}>
-                    Editar
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={() => handleViewDetails(config)}
+                  >
+                    VER INFORMACIÖN
                   </button>
-                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(config.deporte.id)}>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => handleDelete(config.deporte.id)}
+                  >
                     Eliminar
                   </button>
                 </div>
@@ -131,8 +158,16 @@ const Deportes = () => {
           <div className="modal-dialog" role="document">
             <div className="modal-content shadow">
               <div className="modal-header">
-                <h5>{currentData.deporte.id ? "Editar Configuración" : "Crear Configuración"}</h5>
-                <button type="button" className="close" onClick={() => setShowModal(false)}>
+                <h5>
+                  {currentData.deporte.id
+                    ? "Editar Configuración"
+                    : "Crear Configuración"}
+                </h5>
+                <button
+                  type="button"
+                  className="close"
+                  onClick={() => setShowModal(false)}
+                >
                   <span>&times;</span>
                 </button>
               </div>
@@ -147,7 +182,10 @@ const Deportes = () => {
                       onChange={(e) =>
                         setCurrentData({
                           ...currentData,
-                          deporte: { ...currentData.deporte, nombre: e.target.value },
+                          deporte: {
+                            ...currentData.deporte,
+                            nombre: e.target.value,
+                          },
                         })
                       }
                     />
@@ -186,7 +224,10 @@ const Deportes = () => {
                 <button className="btn btn-primary" onClick={handleSave}>
                   Guardar
                 </button>
-                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowModal(false)}
+                >
                   Cancelar
                 </button>
               </div>
