@@ -10,7 +10,10 @@ const EquipoDetalle = ({ id }) => {
   const [showJugadoresModal, setShowJugadoresModal] = useState(false);
   const [editableEquipo, setEditableEquipo] = useState({});
   const [deportes, setDeportes] = useState([]);
+  const [logoPreview, setLogoPreview] = useState(null);
+  const [logoFile, setLogoFile] = useState(null);
   const [eventos, setEventos] = useState([]);
+   const currentUserId = localStorage.getItem("id");
   const [posiciones, setPosiciones] = useState([]);
   const navigate = useNavigate();
 
@@ -70,29 +73,78 @@ const EquipoDetalle = ({ id }) => {
   const handleEditJugadores = () => {
     setShowJugadoresModal(true);
   };
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setLogoFile(file);
+      setLogoPreview(URL.createObjectURL(file));
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setEditableEquipo({ ...editableEquipo, [name]: value });
   };
   const handleSave = async () => {
+    if (!editableEquipo.nombre || !editableEquipo.deporte) {
+      Swal.fire(
+        "Campos incompletos",
+        "Por favor completa nombre y deporte.",
+        "warning"
+      );
+      return;
+    }
+  
     try {
+      const formData = new FormData();
+      formData.append("nombre", editableEquipo.nombre);
+      formData.append("descripcion", editableEquipo.descripcion || "");
+      formData.append("ciudad", editableEquipo.ciudad || "");
+      formData.append("deporte", editableEquipo.deporte);
+      formData.append("entrenador", currentUserId); 
+      formData.append("num_titulares", editableEquipo.num_titulares || 0);
+      formData.append("num_suplentes", editableEquipo.num_suplentes || 0);
+  
 
-      const payload = { ...editableEquipo };
-      delete payload.deporte_nombre;
-
-      const res = await peticion(apiClient, `/equipos/api/${id}/`, "put", payload);
-
-      const equipoActualizado = { ...res.data };
-      const deporte = deportes.find((d) => Number(d.id) === Number(equipoActualizado.deporte));
-      equipoActualizado.deporte_nombre = deporte ? deporte.nombre : "Desconocido";
-
-      setEquipo(equipoActualizado);
-      setShowModal(false);
-      Swal.fire("Actualizado", "Equipo actualizado con éxito.", "success");
+      if (logoFile) {
+        formData.append("logo", logoFile);
+      }
+  
+      const headers = { "Content-Type": "multipart/form-data" };
+  
+      if (editableEquipo.id) {
+        const res = await peticion(
+          apiClient,
+          `/equipos/api/${editableEquipo.id}/`,
+          "put",
+          formData,
+          headers
+        );
+  
+        const equipoActualizado = { ...res.data };
+        const deporte = deportes.find(
+          (d) => Number(d.id) === Number(equipoActualizado.deporte)
+        );
+        equipoActualizado.deporte_nombre = deporte ? deporte.nombre : "Desconocido";
+  
+        setEquipo(equipoActualizado);
+        setShowModal(false);
+        Swal.fire("Actualizado", "Equipo actualizado con éxito.", "success");
+      } else {
+        // Crear un nuevo equipo
+        const res = await peticion(apiClient, `/equipos/api/`, "post", formData, headers);
+  
+        setEquipo(res.data);
+        setShowModal(false);
+        Swal.fire("Creado", "Equipo creado con éxito.", "success");
+      }
     } catch (error) {
-      console.error("Error al actualizar el equipo:", error);
-      Swal.fire("Error", "Ocurrió un error al actualizar el equipo.", "error");
+      console.error("Error al guardar el equipo:", error);
+      Swal.fire(
+        "Error",
+        "Ocurrió un error al guardar el equipo. Por favor, inténtalo de nuevo.",
+        "error"
+      );
     }
   };
 
@@ -215,13 +267,22 @@ const EquipoDetalle = ({ id }) => {
               </div>
             </div>
 
-            {showModal && (
-              <div className="modal d-block bg-dark bg-opacity-50" tabIndex="-1">
-                <div className="modal-dialog modal-lg modal-dialog-centered">
+                        {showModal && (
+              <div className="modal d-block bg-dark bg-opacity-50" tabIndex="-1" role="dialog">
+                <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
                   <div className="modal-content rounded-4">
                     <div className="modal-header">
-                      <h5 className="modal-title">Editar Equipo</h5>
-                      <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
+                      <h5 className="modal-title">{editableEquipo.id ? "Editar Equipo" : "Crear Equipo"}</h5>
+                      <button
+                        type="button"
+                        className="btn-close"
+                        onClick={() => {
+                          setShowModal(false);
+                          setEditableEquipo({});
+                          setLogoFile(null);
+                          setLogoPreview(null);
+                        }}
+                      ></button>
                     </div>
                     <div className="modal-body">
                       <form className="row g-3">
@@ -232,6 +293,34 @@ const EquipoDetalle = ({ id }) => {
                             className="form-control"
                             name="nombre"
                             value={editableEquipo.nombre || ""}
+                            onChange={handleInputChange}
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label">Logo (imagen)</label>
+                          <input
+                            type="file"
+                            className="form-control"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                          />
+                        </div>
+                        {/* Mostrar la imagen actual o la vista previa */}
+                        {(logoPreview || editableEquipo.logo) && (
+                          <div className="text-center my-2">
+                            <img
+                              src={logoPreview || editableEquipo.logo} // Mostrar la vista previa si existe, de lo contrario, el logo actual
+                              alt="Vista previa"
+                              style={{ maxHeight: "150px", objectFit: "contain" }}
+                            />
+                          </div>
+                        )}
+                        <div className="col-md-12">
+                          <label className="form-label">Descripción</label>
+                          <textarea
+                            className="form-control"
+                            name="descripcion"
+                            value={editableEquipo.descripcion || ""}
                             onChange={handleInputChange}
                           />
                         </div>
@@ -252,17 +341,18 @@ const EquipoDetalle = ({ id }) => {
                             name="deporte"
                             value={editableEquipo.deporte || ""}
                             onChange={handleInputChange}
+                            disabled={jugadores.length > 0} 
                           >
-                            <option value="">Seleccione un deporte</option>
-                            {deportes.map((d) => (
-                              <option key={d.id} value={d.id}>
-                                {d.nombre}
+                            <option value="">Selecciona un deporte</option>
+                            {deportes.map((deporte) => (
+                              <option key={deporte.id} value={deporte.id}>
+                                {deporte.nombre}
                               </option>
                             ))}
                           </select>
                         </div>
-                        <div className="col-md-3">
-                          <label className="form-label">Titulares</label>
+                        <div className="col-md-6">
+                          <label className="form-label">Número de Titulares</label>
                           <input
                             type="number"
                             className="form-control"
@@ -271,8 +361,8 @@ const EquipoDetalle = ({ id }) => {
                             onChange={handleInputChange}
                           />
                         </div>
-                        <div className="col-md-3">
-                          <label className="form-label">Suplentes</label>
+                        <div className="col-md-6">
+                          <label className="form-label">Número de Suplentes</label>
                           <input
                             type="number"
                             className="form-control"
@@ -284,8 +374,25 @@ const EquipoDetalle = ({ id }) => {
                       </form>
                     </div>
                     <div className="modal-footer">
-                      <button className="btn btn-primary" onClick={handleSave}>Guardar</button>
-                      <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancelar</button>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={handleSave}
+                      >
+                        Guardar
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => {
+                          setShowModal(false);
+                          setEditableEquipo({});
+                          setLogoFile(null);
+                          setLogoPreview(null);
+                        }}
+                      >
+                        Cancelar
+                      </button>
                     </div>
                   </div>
                 </div>
