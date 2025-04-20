@@ -21,7 +21,7 @@ const EquipoDetalle = ({ id }) => {
         const resEquipo = await peticion(apiClient, `/equipos/api/${id}/`);
 
         const resDeportes = await peticion(apiClient, `/deportes/api/`);
-      
+
         const deportes = resDeportes.data;
 
         const equipoActualizado = { ...resEquipo.data };
@@ -101,93 +101,116 @@ const EquipoDetalle = ({ id }) => {
   }
 
   return (
-    <div className="d-flex justify-content-center align-items-center min-vh-100">
-      <div className="card p-4 shadow-lg w-75">
-      <h1 className="text-center mb-4">{equipo.nombre}</h1>
-        <div className="card-body">
-          <div className="container row gy-4">
-            <div className="card col-4 p-5 shadow-sm mb-4 d-flex flex-column">
-              <div className="card-header bg-light">
-                <h4 className="text-center">Jugadores</h4>
+    <div className="d-flex justify-content-center align-items-center min-vh-100 p-2 p-lg-3">
+      <div className="card p-2 p-lg-4 shadow-lg" style={{
+        maxWidth: "1400px",
+        maxHeight: "100vh",
+        width: "100%",
+        overflow: "auto"
+      }}>
+        <h1 className="text-center mb-2 mb-lg-4 fs-3 fs-lg-2">{equipo.nombre}</h1>
+        <div className="card-body p-0 p-lg-2">
+          <div className="container-fluid px-0">
+            <div className="row g-2 g-lg-4">
+
+              <div className="col-12 col-xxl-5 d-flex">
+                <div className="card p-2 p-lg-3 shadow-sm w-100 d-flex flex-column" style={{
+                  height: "500px"
+                }}>
+                  <div className="card-header bg-light py-2 py-lg-3">
+                    <h4 className="text-center mb-0 fs-5 fs-lg-4">Jugadores</h4>
+                  </div>
+                  <div className="card-body p-1 p-lg-2" style={{
+                    overflowY: "auto",
+                    flex: "1 1 auto"
+                  }}>
+                    {jugadores.length === 0 ? (
+                      <p className="text-muted text-center my-2 my-lg-3">No hay jugadores registrados</p>
+                    ) : (
+                      <ul className="list-group list-group-flush">
+                        {jugadores.map((jugador) => (
+                          <li key={jugador.id} className="list-group-item d-flex justify-content-between align-items-center py-2">
+                            <div className="text-truncate">
+                              <strong className="d-block text-truncate">{jugador.nombre}</strong>
+                              <small className="text-muted text-truncate d-block">{jugador.posicion_nombre}</small>
+                            </div>
+                            <span className="badge bg-primary rounded-pill ms-2">
+                              {jugador.es_titular ? "Titular" : "Suplente"}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <div className="card-footer bg-transparent border-0 text-center pt-2 pb-1">
+                    <button className="btn btn-success btn-sm btn-lg" onClick={handleEditJugadores}>
+                      Editar Jugadores
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="card-body flex-grow-1">
-                {jugadores.length === 0 ? (
-                  <p className="text-muted text-center">No hay jugadores registrados en este equipo</p>
-                ) : (
-                  <ul className="list-group list-group-flush">
-                    {jugadores.map((jugador) => (
-                      <li key={jugador.id} className="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                          <strong>{jugador.nombre}</strong>
-                          <div className="text-muted">{jugador.posicion_nombre}</div>
-                        </div>
-                        <span className="badge bg-primary rounded-pill">{jugador.es_titular ? "Titular" : "Suplente"}</span>
+              <div className="col-12 col-xxl-3 d-flex">
+                <div className="card h-100 p-2 p-lg-3 shadow-sm w-100 d-flex flex-column">
+                  <div className="card-header bg-light py-2 py-lg-3">
+                    <h4 className="text-center mb-0 fs-5 fs-lg-4">Partidos</h4>
+                  </div>
+                  <div className="card-body p-1 p-lg-3">
+                    {eventos.length === 0 ? (
+                      <p className="text-muted text-center my-2 my-lg-3">No hay eventos registrados</p>
+                    ) : (
+                      <ul className="list-group list-group-flush">
+                        {eventos.map((evento) => (
+                          <li key={evento.id} className="list-group-item d-flex justify-content-between align-items-center py-2">
+                            <div className="text-truncate">
+                              <strong className="d-block text-truncate">{evento.nombre}</strong>
+                              <small className="text-muted d-block">
+                                Fecha: {new Date(evento.fecha).toLocaleDateString()}
+                              </small>
+                            </div>
+                            <span className={`badge rounded-pill ms-2 ${evento.resultado ? "bg-secondary" : "bg-primary"}`}>
+                              {evento.resultado || "Pendiente"}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="col-12 col-xxl-4 d-flex">
+                <div className="card h-100 p-2 p-lg-3 shadow-sm w-100 d-flex flex-column">
+                  <div className="card-header bg-light py-2 py-lg-3">
+                    <h4 className="text-center mb-0 fs-5 fs-lg-4">Información General Del Equipo</h4>
+                  </div>
+                  <div className="card-body flex-grow-1 p-1 p-lg-3">
+                    <ul className="list-group list-group-flush">
+                      <li className="list-group-item d-flex align-items-center py-2">
+                        <strong className="me-2 flex-shrink-0">Nombre:</strong>
+                        <span className="text-truncate">{equipo.nombre}</span>
                       </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <div className="text-center mt-auto">
-                <button className="btn btn-success" onClick={handleEditJugadores}>
-                  Editar Jugadores
-                </button>
-              </div>
-            </div>
-            <div className="card col-3 p-5 shadow-sm mb-4">
-              <div className="card-header bg-light">
-                <h4 className="text-center">Partidos</h4>
-              </div>
-              <div className="card-body">
-                {eventos.length === 0 ? (
-                  <p className="text-muted text-center">No hay eventos registrados para este equipo</p>
-                ) : (
-                  <ul className="list-group list-group-flush">
-                    {eventos.map((evento) => (
-                      <li key={evento.id} className="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                          <strong>{evento.nombre}</strong>
-                          <div className="text-muted">Fecha: {new Date(evento.fecha).toLocaleDateString()}</div>
-                        </div>
-                        <span className={`badge rounded-pill ${evento.resultado ? "bg-secondary" : "bg-primary"}`}>
-                          {evento.resultado || "Pendiente"}
-                        </span>
+                      <li className="list-group-item d-flex align-items-center py-2">
+                        <strong className="me-2 flex-shrink-0">Ciudad:</strong>
+                        <span>{equipo.ciudad}</span>
                       </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-            <div className="card col-5 p-5 shadow-sm mb-4">
-              <div className="card-header bg-light">
-                <h4 className="text-center">Información General Del Equipo</h4>
-              </div>
-              <div className="card-body">
-                <ul className="list-group list-group-flush">
-                  <li className="list-group-item d-flex align-items-center">
-                    <strong>Nombre:</strong>
-                    <span className="ms-2">{equipo.nombre}</span>
-                  </li>
-                  <li className="list-group-item d-flex align-items-center">
-                    <strong>Ciudad:</strong>
-                    <span className="ms-2">{equipo.ciudad}</span>
-                  </li>
-                  <li className="list-group-item d-flex align-items-center">
-                    <strong>Deporte:</strong>
-                    <span className="ms-2">{equipo.deporte_nombre}</span>
-                  </li>
-                  <li className="list-group-item d-flex align-items-center">
-                    <strong>Jugadores:</strong>
-                    <span className="ms-2">{equipo.num_titulares}</span>
-                  </li>
-                  <li className="list-group-item d-flex align-items-center">
-                    <strong>Suplentes:</strong>
-                    <span className="ms-2">{equipo.num_suplentes}</span>
-                  </li>
-                </ul>
-                <div className="text-center mt-4">
-                  <button className="btn btn-success" onClick={handleEdit}>
-                    Editar Información 
-                  </button>
+                      <li className="list-group-item d-flex align-items-center py-2">
+                        <strong className="me-2 flex-shrink-0">Deporte:</strong>
+                        <span>{equipo.deporte_nombre}</span>
+                      </li>
+                      <li className="list-group-item d-flex align-items-center py-2">
+                        <strong className="me-2 flex-shrink-0">Jugadores:</strong>
+                        <span>{equipo.num_titulares}</span>
+                      </li>
+                      <li className="list-group-item d-flex align-items-center py-2">
+                        <strong className="me-2 flex-shrink-0">Suplentes:</strong>
+                        <span>{equipo.num_suplentes}</span>
+                      </li>
+                    </ul>
+                    <div className="text-center mt-3">
+                      <button className="btn btn-success btn-sm btn-lg" onClick={handleEdit}>
+                        Editar Información
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
