@@ -87,7 +87,7 @@ const EquipoDetalle = ({ id }) => {
 
         const empates = eventosConNombres.filter(
           (evento) =>
-            evento.resultado_equipo === "Empató" && evento.puntos_equipo1 === evento.puntos_equipo2
+            evento.resultado_equipo === "Empate" && evento.puntos_equipo1 === evento.puntos_equipo2
         ).length;
 
         const totalPartidos = victorias + derrotas + empates;
