@@ -56,6 +56,7 @@ const EquipoDetalle = ({ id }) => {
 
         const resEventos = await peticion(apiClient, `/eventos/equipo/${id}/`);
         const eventos = resEventos.data.eventos;
+        const estadisticas = resEventos.data.estadisticas;
 
         // Obtener nombres de los equipos para cada evento
         const eventosConNombres = await Promise.all(
@@ -72,31 +73,10 @@ const EquipoDetalle = ({ id }) => {
 
         setEventos(eventosConNombres);
 
-        // Calcular estadísticas
-        const victorias = eventosConNombres.filter(
-          (evento) =>
-            (evento.resultado_equipo === "Ganó" && evento.equipo1 === id && evento.puntos_equipo1 > evento.puntos_equipo2) ||
-            (evento.resultado_equipo === "Ganó" && evento.equipo2 === id && evento.puntos_equipo2 > evento.puntos_equipo1)
-        ).length;
-
-        const derrotas = eventosConNombres.filter(
-          (evento) =>
-            (evento.resultado_equipo === "Perdió" && evento.equipo1 === id && evento.puntos_equipo1 < evento.puntos_equipo2) ||
-            (evento.resultado_equipo === "Perdió" && evento.equipo2 === id && evento.puntos_equipo2 < evento.puntos_equipo1)
-        ).length;
-
-        const empates = eventosConNombres.filter(
-          (evento) =>
-            evento.resultado_equipo === "Empate" && evento.puntos_equipo1 === evento.puntos_equipo2
-        ).length;
-
-        const totalPartidos = victorias + derrotas + empates;
-        const efectividad = totalPartidos > 0 ? ((victorias / totalPartidos) * 100).toFixed(2) : 0;
-
-        setVictorias(victorias);
-        setDerrotas(derrotas);
-        setEmpates(empates);
-        setEfectividad(efectividad);
+        setVictorias(estadisticas.victorias);
+        setDerrotas(estadisticas.derrotas);
+        setEmpates(estadisticas.empates);
+        setEfectividad(estadisticas.efectividad);
       } catch (error) {
         console.error("Error al cargar los datos:", error);
         Swal.fire("Error", "No se pudo cargar la información del equipo", "error");
