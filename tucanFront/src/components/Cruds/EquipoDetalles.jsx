@@ -90,7 +90,6 @@ const EquipoDetalle = ({ id }) => {
 
         setEventos(eventosConNombres);
 
-<<<<<<< HEAD
         // Calcular estadísticas
         const victorias = eventosConNombres.filter(
           (evento) =>
@@ -128,12 +127,6 @@ const EquipoDetalle = ({ id }) => {
         setDerrotas(derrotas);
         setEmpates(empates);
         setEfectividad(efectividad);
-=======
-        setVictorias(estadisticas.victorias);
-        setDerrotas(estadisticas.derrotas);
-        setEmpates(estadisticas.empates);
-        setEfectividad(estadisticas.efectividad);
->>>>>>> f7d6d50bc9b2e225dfc25131a7dca0a6069ad0e0
       } catch (error) {
         console.error("Error al cargar los datos:", error);
         Swal.fire(
