@@ -75,18 +75,19 @@ const EquipoDetalle = ({ id }) => {
         // Calcular estadísticas
         const victorias = eventosConNombres.filter(
           (evento) =>
-            (evento.resultado_equipo === "Ganó" && evento.equipo1 === id) ||
-            (evento.resultado_equipo === "Perdió" && evento.equipo2 === id)
+            (evento.resultado_equipo === "Ganó" && evento.equipo1 === id && evento.puntos_equipo1 > evento.puntos_equipo2) ||
+            (evento.resultado_equipo === "Ganó" && evento.equipo2 === id && evento.puntos_equipo2 > evento.puntos_equipo1)
         ).length;
 
         const derrotas = eventosConNombres.filter(
           (evento) =>
-            (evento.resultado_equipo === "Perdió" && evento.equipo1 === id) ||
-            (evento.resultado_equipo === "Ganó" && evento.equipo2 === id)
+            (evento.resultado_equipo === "Perdió" && evento.equipo1 === id && evento.puntos_equipo1 < evento.puntos_equipo2) ||
+            (evento.resultado_equipo === "Perdió" && evento.equipo2 === id && evento.puntos_equipo2 < evento.puntos_equipo1)
         ).length;
 
         const empates = eventosConNombres.filter(
-          (evento) => evento.resultado_equipo === "Empató"
+          (evento) =>
+            evento.resultado_equipo === "Empató" && evento.puntos_equipo1 === evento.puntos_equipo2
         ).length;
 
         const totalPartidos = victorias + derrotas + empates;
