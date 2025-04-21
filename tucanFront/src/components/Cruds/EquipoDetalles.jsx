@@ -19,6 +19,15 @@ const EquipoDetalle = ({ id }) => {
   const [derrotas, setDerrotas] = useState(0);
   const [empates, setEmpates] = useState(0);
   const [efectividad, setEfectividad] = useState(0);
+  const [nuevoJugador, setNuevoJugador] = useState({
+    id : null,
+    nombre: "",
+    fecha_nacimiento: "",
+    posicion: "",
+    es_titular: false,
+  });
+  const [editarJugador, setEditarJugador] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,28 +40,27 @@ const EquipoDetalle = ({ id }) => {
         const deportes = resDeportes.data;
 
         const equipoActualizado = { ...resEquipo.data };
-        const deporte = deportes.find((d) => Number(d.id) === Number(equipoActualizado.deporte));
-        equipoActualizado.deporte_nombre = deporte ? deporte.nombre : "Desconocido";
+        const deporte = deportes.find(
+          (d) => Number(d.id) === Number(equipoActualizado.deporte)
+        );
+        equipoActualizado.deporte_nombre = deporte
+          ? deporte.nombre
+          : "Desconocido";
 
         setEquipo(equipoActualizado);
         setDeportes(deportes);
 
-        const resJugadores = await peticion(apiClient, `jugadores/jugadores/${id}/`);
-        console.log("Datos de jugadores:", resJugadores.data.jugadores);
-        const jugadores = resJugadores.data.jugadores;
+        const resJugadores = await peticion(
+          apiClient,
+          `jugadores/jugadores/${id}/`
+        );
+        console.log(resJugadores.data.jugadores);
+        setJugadores(resJugadores.data.jugadores || []);
 
-        const resPosiciones = await peticion(apiClient, `/posicion/api/`);
-        const posiciones = resPosiciones.data;
 
-        const jugadoresConPosicion = jugadores.map((jugador) => {
-          const posicion = posiciones.find((p) => p.id === jugador.posicion);
-          return {
-            ...jugador,
-            posicion_nombre: posicion ? posicion.nombre : "Desconocida",
-          };
-        });
-
-        setJugadores(jugadoresConPosicion);
+        const resPosiciones = await peticion(apiClient, `/posicion/equipo/${id}/`);
+        
+        setPosiciones(resPosiciones.data || []);
 
         const resEventos = await peticion(apiClient, `/eventos/equipo/${id}/`);
         const eventos = resEventos.data.eventos;
@@ -60,8 +68,14 @@ const EquipoDetalle = ({ id }) => {
         // Obtener nombres de los equipos para cada evento
         const eventosConNombres = await Promise.all(
           eventos.map(async (evento) => {
-            const equipo1Res = await peticion(apiClient, `/equipos/api/${evento.equipo1}/`);
-            const equipo2Res = await peticion(apiClient, `/equipos/api/${evento.equipo2}/`);
+            const equipo1Res = await peticion(
+              apiClient,
+              `/equipos/api/${evento.equipo1}/`
+            );
+            const equipo2Res = await peticion(
+              apiClient,
+              `/equipos/api/${evento.equipo2}/`
+            );
             return {
               ...evento,
               equipo1_nombre: equipo1Res.data.nombre,
@@ -75,23 +89,35 @@ const EquipoDetalle = ({ id }) => {
         // Calcular estadísticas
         const victorias = eventosConNombres.filter(
           (evento) =>
-            (evento.resultado_equipo === "Ganó" && evento.equipo1 === id && evento.puntos_equipo1 > evento.puntos_equipo2) ||
-            (evento.resultado_equipo === "Ganó" && evento.equipo2 === id && evento.puntos_equipo2 > evento.puntos_equipo1)
+            (evento.resultado_equipo === "Ganó" &&
+              evento.equipo1 === id &&
+              evento.puntos_equipo1 > evento.puntos_equipo2) ||
+            (evento.resultado_equipo === "Ganó" &&
+              evento.equipo2 === id &&
+              evento.puntos_equipo2 > evento.puntos_equipo1)
         ).length;
 
         const derrotas = eventosConNombres.filter(
           (evento) =>
-            (evento.resultado_equipo === "Perdió" && evento.equipo1 === id && evento.puntos_equipo1 < evento.puntos_equipo2) ||
-            (evento.resultado_equipo === "Perdió" && evento.equipo2 === id && evento.puntos_equipo2 < evento.puntos_equipo1)
+            (evento.resultado_equipo === "Perdió" &&
+              evento.equipo1 === id &&
+              evento.puntos_equipo1 < evento.puntos_equipo2) ||
+            (evento.resultado_equipo === "Perdió" &&
+              evento.equipo2 === id &&
+              evento.puntos_equipo2 < evento.puntos_equipo1)
         ).length;
 
         const empates = eventosConNombres.filter(
           (evento) =>
-            evento.resultado_equipo === "Empate" && evento.puntos_equipo1 === evento.puntos_equipo2
+            evento.resultado_equipo === "Empate" &&
+            evento.puntos_equipo1 === evento.puntos_equipo2
         ).length;
 
         const totalPartidos = victorias + derrotas + empates;
-        const efectividad = totalPartidos > 0 ? ((victorias / totalPartidos) * 100).toFixed(2) : 0;
+        const efectividad =
+          totalPartidos > 0
+            ? ((victorias / totalPartidos) * 100).toFixed(2)
+            : 0;
 
         setVictorias(victorias);
         setDerrotas(derrotas);
@@ -99,7 +125,11 @@ const EquipoDetalle = ({ id }) => {
         setEfectividad(efectividad);
       } catch (error) {
         console.error("Error al cargar los datos:", error);
-        Swal.fire("Error", "No se pudo cargar la información del equipo", "error");
+        Swal.fire(
+          "Error",
+          "No se pudo cargar la información del equipo",
+          "error"
+        );
         navigate("/equipos");
       }
     };
@@ -128,6 +158,7 @@ const EquipoDetalle = ({ id }) => {
   const handleEditJugadores = () => {
     setShowJugadoresModal(true);
   };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -179,7 +210,9 @@ const EquipoDetalle = ({ id }) => {
         const deporte = deportes.find(
           (d) => Number(d.id) === Number(equipoActualizado.deporte)
         );
-        equipoActualizado.deporte_nombre = deporte ? deporte.nombre : "Desconocido";
+        equipoActualizado.deporte_nombre = deporte
+          ? deporte.nombre
+          : "Desconocido";
 
         setEquipo(equipoActualizado);
         actualizarEventos(equipoActualizado);
@@ -195,42 +228,129 @@ const EquipoDetalle = ({ id }) => {
       );
     }
   };
+  const handleSaveJugador = async () => {
+    if (!nuevoJugador.nombre || !nuevoJugador.fecha_nacimiento || !nuevoJugador.posicion) {
+      Swal.fire("Error", "Por favor completa todos los campos", "error");
+      return;
+    }
+  
+    try {
+      const edad = new Date().getFullYear() - new Date(nuevoJugador.fecha_nacimiento).getFullYear();
+      const jugadorData = {
+        ...nuevoJugador,
+        edad,
+        equipo: equipo.id,
+      };
+  
+      if (nuevoJugador.id) {
+        // Actualizar jugador existente
+        const res = await peticion(apiClient, `/jugadores/api/${nuevoJugador.id}/`, "put", jugadorData);
+        setJugadores(
+          jugadores.map((jugador) =>
+            jugador.id === nuevoJugador.id
+              ? { ...res.data, posicion_nombre: posiciones.find(p => p.id === Number(nuevoJugador.posicion)).nombre }
+              : jugador
+          )
+        );
+        Swal.fire("Éxito", "Jugador actualizado correctamente", "success");
+      } else {
+        // Crear nuevo jugador
+        const res = await peticion(apiClient, "/jugadores/api/", "post", jugadorData);
+        setJugadores([
+          ...jugadores,
+          { ...res.data, posicion_nombre: posiciones.find(p => p.id === Number(nuevoJugador.posicion)).nombre },
+        ]);
+        Swal.fire("Éxito", "Jugador agregado correctamente", "success");
+      }
+  
+      // Reiniciar el formulario
+      setNuevoJugador({ id: null, nombre: "", fecha_nacimiento: "", posicion: "", es_titular: false });
+    } catch (error) {
+      console.error("Error al guardar el jugador:", error);
+      Swal.fire("Error", "No se pudo guardar el jugador", "error");
+    }
+    setEditarJugador(false);
+  };
+  /// Editar un jugador existente
+  const handleEditJugador = (jugador) => {
+    setNuevoJugador({
+      id: jugador.id,
+      nombre: jugador.nombre,
+      fecha_nacimiento: jugador.fecha_nacimiento,
+      posicion: jugador.posicion,
+      es_titular: jugador.es_titular,
+    });
+    setEditarJugador(true);
+  };
+  const handleDeleteJugador = async (id) => {
+    try {
+      await peticion(apiClient, `/jugadores/api/${id}/`, "delete");
+      setJugadores(jugadores.filter((jugador) => jugador.id !== id));
+      Swal.fire("Éxito", "Jugador eliminado correctamente", "success");
+    } catch (error) {
+      console.error("Error al eliminar el jugador:", error);
+      Swal.fire("Error", "No se pudo eliminar el jugador", "error");
+    }
+  };
 
   if (!equipo) {
-    return <div className="text-center py-4">Por favor selecciona un Equipo en la pestaña Equipos</div>;
+    return (
+      <div className="text-center py-4">
+        Por favor selecciona un Equipo en la pestaña Equipos
+      </div>
+    );
   }
 
   return (
-    <div className="d-flex justify-content-center align-items-center min-vh-100 p-2 p-lg-3" >
-      <div className="card p-2 p-lg-4 shadow-lg" style={{
-        maxWidth: "1400px",
-        maxHeight: "100vh",
-        width: "100%",
-        overflow: "auto"
-      }}>
-        <h1 className="text-center mb-2 mb-lg-4 fs-3 fs-lg-2">{equipo.nombre}</h1>
+    <div className="d-flex justify-content-center align-items-center min-vh-100 p-2 p-lg-3">
+      <div
+        className="card p-2 p-lg-4 shadow-lg"
+        style={{
+          maxWidth: "1400px",
+          maxHeight: "100vh",
+          width: "100%",
+          overflow: "auto",
+        }}
+      >
+        <h1 className="text-center mb-2 mb-lg-4 fs-3 fs-lg-2">
+          {equipo.nombre}
+        </h1>
         <div className="card-body p-0 p-lg-2">
           <div className="container-fluid px-0">
             <div className="row g-2 g-lg-4">
               <div className="col-12">
                 <div className="card p-2 p-lg-3 shadow-sm w-100 mb-4">
                   <div className="card-header bg-light py-2 py-lg-3">
-                    <h4 className="text-center mb-0 fs-5 fs-lg-4">Estadísticas Generales</h4>
+                    <h4 className="text-center mb-0 fs-5 fs-lg-4">
+                      Estadísticas Generales
+                    </h4>
                   </div>
                   <div className="card-body d-flex flex-wrap justify-content-around align-items-center">
-                    <div className="text-center m-2" style={{ minWidth: "120px" }}>
+                    <div
+                      className="text-center m-2"
+                      style={{ minWidth: "120px" }}
+                    >
                       <h5 className="text-success mb-1">{victorias}</h5>
                       <p className="mb-0">Victorias</p>
                     </div>
-                    <div className="text-center m-2" style={{ minWidth: "120px" }}>
+                    <div
+                      className="text-center m-2"
+                      style={{ minWidth: "120px" }}
+                    >
                       <h5 className="text-danger mb-1">{derrotas}</h5>
                       <p className="mb-0">Derrotas</p>
                     </div>
-                    <div className="text-center m-2" style={{ minWidth: "120px" }}>
+                    <div
+                      className="text-center m-2"
+                      style={{ minWidth: "120px" }}
+                    >
                       <h5 className="text-primary mb-1">{empates}</h5>
                       <p className="mb-0">Empates</p>
                     </div>
-                    <div className="text-center m-2" style={{ minWidth: "120px" }}>
+                    <div
+                      className="text-center m-2"
+                      style={{ minWidth: "120px" }}
+                    >
                       <h5 className="text-purple mb-1">{efectividad}%</h5>
                       <p className="mb-0">Efectividad</p>
                     </div>
@@ -238,25 +358,40 @@ const EquipoDetalle = ({ id }) => {
                 </div>
               </div>
               <div className="col-12 col-lg-4">
-                <div className="card p-2 p-lg-3 shadow-sm w-100 d-flex flex-column" style={{
-                  height: "500px"
-                }}>
+                <div
+                  className="card p-2 p-lg-3 shadow-sm w-100 d-flex flex-column"
+                  style={{
+                    height: "500px",
+                  }}
+                >
                   <div className="card-header bg-light py-2 py-lg-3">
                     <h4 className="text-center mb-0 fs-5 fs-lg-4">Jugadores</h4>
                   </div>
-                  <div className="card-body p-1 p-lg-2" style={{
-                    overflowY: "auto",
-                    flex: "1 1 auto"
-                  }}>
+                  <div
+                    className="card-body p-1 p-lg-2"
+                    style={{
+                      overflowY: "auto",
+                      flex: "1 1 auto",
+                    }}
+                  >
                     {jugadores.length === 0 ? (
-                      <p className="text-muted text-center my-2 my-lg-3">No hay jugadores registrados</p>
+                      <p className="text-muted text-center my-2 my-lg-3">
+                        No hay jugadores registrados
+                      </p>
                     ) : (
                       <ul className="list-group list-group-flush">
                         {jugadores.map((jugador) => (
-                          <li key={jugador.id} className="list-group-item d-flex justify-content-between align-items-center py-2">
+                          <li
+                            key={jugador.id}
+                            className="list-group-item d-flex justify-content-between align-items-center py-2"
+                          >
                             <div className="text-truncate">
-                              <strong className="d-block text-truncate">{jugador.nombre}</strong>
-                              <small className="text-muted text-truncate d-block">{jugador.posicion_nombre}</small>
+                              <strong className="d-block text-truncate">
+                                {jugador.nombre}
+                              </strong>
+                              <small className="text-muted text-truncate d-block">
+                                {jugador.posicion_nombre}
+                              </small>
                             </div>
                             <span className="badge bg-primary rounded-pill ms-2">
                               {jugador.es_titular ? "Titular" : "Suplente"}
@@ -267,25 +402,36 @@ const EquipoDetalle = ({ id }) => {
                     )}
                   </div>
                   <div className="card-footer bg-transparent border-0 text-center pt-2 pb-1">
-                    <button className="btn btn-success btn-sm btn-lg" onClick={handleEditJugadores}>
+                    <button
+                      className="btn btn-success btn-sm btn-lg"
+                      onClick={handleEditJugadores}
+                    >
                       Editar Jugadores
                     </button>
                   </div>
                 </div>
               </div>
               <div className="col-12 col-lg-4">
-                <div className="card p-2 p-lg-3 shadow-sm w-100 d-flex flex-column" style={{
-                  height: "500px"
-                }}>
+                <div
+                  className="card p-2 p-lg-3 shadow-sm w-100 d-flex flex-column"
+                  style={{
+                    height: "500px",
+                  }}
+                >
                   <div className="card-header bg-light py-2 py-lg-3">
                     <h4 className="text-center mb-0 fs-5 fs-lg-4">Partidos</h4>
                   </div>
-                  <div className="card-body p-1 p-lg-2" style={{
-                    overflowY: "auto",
-                    flex: "1 1 auto"
-                  }}>
+                  <div
+                    className="card-body p-1 p-lg-2"
+                    style={{
+                      overflowY: "auto",
+                      flex: "1 1 auto",
+                    }}
+                  >
                     {eventos.length === 0 ? (
-                      <p className="text-muted text-center my-2 my-lg-3">No hay eventos registrados</p>
+                      <p className="text-muted text-center my-2 my-lg-3">
+                        No hay eventos registrados
+                      </p>
                     ) : (
                       <ul className="list-group list-group-flush">
                         {eventos.map((evento) => (
@@ -296,13 +442,30 @@ const EquipoDetalle = ({ id }) => {
                             onClick={() =>
                               Swal.fire({
                                 title: `${evento.nombre}`,
-                                html: `<strong>${equipo.id === evento.equipo1 ? evento.equipo1_nombre : evento.equipo2_nombre} vs ${equipo.id === evento.equipo1 ? evento.equipo2_nombre : evento.equipo1_nombre}</strong><br/>Deporte: ${equipo.deporte_nombre}<br/>Fecha: ${new Date(evento.fecha).toLocaleDateString()}<br/>Resultado: ${evento.resultado_equipo || "Pendiente"}<br/>${evento.puntos_equipo1 != null && evento.puntos_equipo2 != null
-                                  ? `Puntos: ${equipo.id === evento.equipo1
-                                    ? `${evento.puntos_equipo1} - ${evento.puntos_equipo2}`
-                                    : `${evento.puntos_equipo2} - ${evento.puntos_equipo1}`
-                                  }<br/>`
-                                  : ""
-                                  }`,
+                                html: `<strong>${
+                                  equipo.id === evento.equipo1
+                                    ? evento.equipo1_nombre
+                                    : evento.equipo2_nombre
+                                } vs ${
+                                  equipo.id === evento.equipo1
+                                    ? evento.equipo2_nombre
+                                    : evento.equipo1_nombre
+                                }</strong><br/>Deporte: ${
+                                  equipo.deporte_nombre
+                                }<br/>Fecha: ${new Date(
+                                  evento.fecha
+                                ).toLocaleDateString()}<br/>Resultado: ${
+                                  evento.resultado_equipo || "Pendiente"
+                                }<br/>${
+                                  evento.puntos_equipo1 != null &&
+                                  evento.puntos_equipo2 != null
+                                    ? `Puntos: ${
+                                        equipo.id === evento.equipo1
+                                          ? `${evento.puntos_equipo1} - ${evento.puntos_equipo2}`
+                                          : `${evento.puntos_equipo2} - ${evento.puntos_equipo1}`
+                                      }<br/>`
+                                    : ""
+                                }`,
                                 icon: "info",
                                 confirmButtonText: "Cerrar",
                               })
@@ -316,23 +479,27 @@ const EquipoDetalle = ({ id }) => {
                               </strong>
                               <small className="text-muted d-block">
                                 {new Date(evento.fecha) > new Date()
-                                  ? `Fecha: ${new Date(evento.fecha).toLocaleDateString()}`
+                                  ? `Fecha: ${new Date(
+                                      evento.fecha
+                                    ).toLocaleDateString()}`
                                   : evento.resultado_equipo || "pendnte"}
                               </small>
                             </div>
                             <span
-                              className={`badge rounded-pill ms-2 ${new Date(evento.fecha) > new Date()
-                                ? "bg-warning"
-                                : evento.resultado
+                              className={`badge rounded-pill ms-2 ${
+                                new Date(evento.fecha) > new Date()
+                                  ? "bg-warning"
+                                  : evento.resultado
                                   ? "bg-secondary"
                                   : "bg-primary"
-                                }`}
+                              }`}
                             >
                               {new Date(evento.fecha) > new Date()
                                 ? "Próximo"
                                 : equipo.id === evento.equipo1
-                                  ? `${evento.puntos_equipo1} - ${evento.puntos_equipo2}`
-                                  : `${evento.puntos_equipo2} - ${evento.puntos_equipo1}` || "Pendiente"}
+                                ? `${evento.puntos_equipo1} - ${evento.puntos_equipo2}`
+                                : `${evento.puntos_equipo2} - ${evento.puntos_equipo1}` ||
+                                  "Pendiente"}
                             </span>
                           </li>
                         ))}
@@ -344,7 +511,9 @@ const EquipoDetalle = ({ id }) => {
               <div className="col-12 col-lg-4">
                 <div className="card h-100 p-2 p-lg-3 shadow-sm w-100 d-flex flex-column">
                   <div className="card-header bg-light py-2 py-lg-3">
-                    <h4 className="text-center mb-0 fs-5 fs-lg-4">Información General Del Equipo</h4>
+                    <h4 className="text-center mb-0 fs-5 fs-lg-4">
+                      Información General Del Equipo
+                    </h4>
                   </div>
                   <div className="card-body flex-grow-1 p-1 p-lg-3">
                     <ul className="list-group list-group-flush">
@@ -361,16 +530,23 @@ const EquipoDetalle = ({ id }) => {
                         <span>{equipo.deporte_nombre}</span>
                       </li>
                       <li className="list-group-item d-flex align-items-center py-2">
-                        <strong className="me-2 flex-shrink-0">Jugadores:</strong>
+                        <strong className="me-2 flex-shrink-0">
+                          Jugadores:
+                        </strong>
                         <span>{equipo.num_titulares}</span>
                       </li>
                       <li className="list-group-item d-flex align-items-center py-2">
-                        <strong className="me-2 flex-shrink-0">Suplentes:</strong>
+                        <strong className="me-2 flex-shrink-0">
+                          Suplentes:
+                        </strong>
                         <span>{equipo.num_suplentes}</span>
                       </li>
                     </ul>
                     <div className="text-center mt-3">
-                      <button className="btn btn-success btn-sm btn-lg" onClick={handleEdit}>
+                      <button
+                        className="btn btn-success btn-sm btn-lg"
+                        onClick={handleEdit}
+                      >
                         Editar Información
                       </button>
                     </div>
@@ -380,11 +556,20 @@ const EquipoDetalle = ({ id }) => {
             </div>
 
             {showModal && (
-              <div className="modal d-block bg-dark bg-opacity-50" tabIndex="-1" role="dialog">
-                <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
+              <div
+                className="modal d-block bg-dark bg-opacity-50"
+                tabIndex="-1"
+                role="dialog"
+              >
+                <div
+                  className="modal-dialog modal-lg modal-dialog-centered"
+                  role="document"
+                >
                   <div className="modal-content rounded-4">
                     <div className="modal-header">
-                      <h5 className="modal-title">{editableEquipo.id ? "Editar Equipo" : "Crear Equipo"}</h5>
+                      <h5 className="modal-title">
+                        {editableEquipo.id ? "Editar Equipo" : "Crear Equipo"}
+                      </h5>
                       <button
                         type="button"
                         className="btn-close"
@@ -423,7 +608,10 @@ const EquipoDetalle = ({ id }) => {
                             <img
                               src={logoPreview || editableEquipo.logo} // Mostrar la vista previa si existe, de lo contrario, el logo actual
                               alt="Vista previa"
-                              style={{ maxHeight: "150px", objectFit: "contain" }}
+                              style={{
+                                maxHeight: "150px",
+                                objectFit: "contain",
+                              }}
                             />
                           </div>
                         )}
@@ -464,7 +652,9 @@ const EquipoDetalle = ({ id }) => {
                           </select>
                         </div>
                         <div className="col-md-6">
-                          <label className="form-label">Número de Titulares</label>
+                          <label className="form-label">
+                            Número de Titulares
+                          </label>
                           <input
                             type="number"
                             className="form-control"
@@ -474,7 +664,9 @@ const EquipoDetalle = ({ id }) => {
                           />
                         </div>
                         <div className="col-md-6">
-                          <label className="form-label">Número de Suplentes</label>
+                          <label className="form-label">
+                            Número de Suplentes
+                          </label>
                           <input
                             type="number"
                             className="form-control"
@@ -510,8 +702,12 @@ const EquipoDetalle = ({ id }) => {
                 </div>
               </div>
             )}
+
             {showJugadoresModal && (
-              <div className="modal d-block bg-dark bg-opacity-50" tabIndex="-1">
+              <div
+                className="modal d-block bg-dark bg-opacity-50"
+                tabIndex="-1"
+              >
                 <div className="modal-dialog modal-lg modal-dialog-centered">
                   <div className="modal-content rounded-4">
                     <div className="modal-header">
@@ -523,13 +719,42 @@ const EquipoDetalle = ({ id }) => {
                       ></button>
                     </div>
                     <div className="modal-body">
+                      {/* Formulario para agregar jugadores  Falta mejorarlo*/}
                       <div className="mb-3 d-flex">
                         <input
                           type="text"
                           className="form-control me-2"
                           placeholder="Nombre"
+                          value={nuevoJugador.nombre}
+                          onChange={(e) =>
+                            setNuevoJugador({
+                              ...nuevoJugador,
+                              nombre: e.target.value,
+                            })
+                          }
                         />
-                        <select className="form-select me-2">
+                        <input
+                          type="date"
+                          className="form-control me-2"
+                          placeholder="Fecha de Nacimiento"
+                          value={nuevoJugador.fecha_nacimiento}
+                          onChange={(e) =>
+                            setNuevoJugador({
+                              ...nuevoJugador,
+                              fecha_nacimiento: e.target.value,
+                            })
+                          }
+                        />
+                        <select
+                          className="form-select me-2"
+                          value={nuevoJugador.posicion}
+                          onChange={(e) =>
+                            setNuevoJugador({
+                              ...nuevoJugador,
+                              posicion: e.target.value,
+                            })
+                          }
+                        >
                           <option value="">Posición</option>
                           {posiciones.map((posicion) => (
                             <option key={posicion.id} value={posicion.id}>
@@ -538,19 +763,32 @@ const EquipoDetalle = ({ id }) => {
                           ))}
                         </select>
                         <input
-                          type="number"
-                          className="form-control me-2"
-                          placeholder="Número"
+                          type="checkbox"
+                          className="form-check-input me-2"
+                          checked={nuevoJugador.es_titular}
+                          onChange={(e) =>
+                            setNuevoJugador({
+                              ...nuevoJugador,
+                              es_titular: e.target.checked,
+                            })
+                          }
                         />
-                        <button className="btn btn-success">Agregar</button>
+                        <button
+                          className="btn btn-success"
+                          onClick={handleSaveJugador}
+                        >
+                          {editarJugador ? "Actualizar" : "Agregar"}
+                        </button>
                       </div>
+
                       <table className="table table-striped">
                         <thead>
                           <tr>
                             <th>Nombre</th>
+                            <th>Fecha de Nacimiento</th>
+                            <th>Edad</th>
                             <th>Posición</th>
-                            <th>Número</th>
-                            <th>Suplente</th>
+                            <th>Es Titular</th>
                             <th>Acciones</th>
                           </tr>
                         </thead>
@@ -558,20 +796,25 @@ const EquipoDetalle = ({ id }) => {
                           {jugadores.map((jugador) => (
                             <tr key={jugador.id}>
                               <td>{jugador.nombre}</td>
-                              <td>{jugador.posicion_nombre}</td>
-                              <td>{jugador.numero}</td>
+                              <td>{jugador.fecha_nacimiento}</td>
+                              <td>{jugador.edad}</td>
+                              <td>{jugador.posicion}</td>
+                              <td>{jugador.es_titular ? "Sí" : "No"}</td>
                               <td>
-                                <input
-                                  type="checkbox"
-                                  checked={jugador.es_suplente}
-                                  readOnly
-                                />
-                              </td>
-                              <td>
-                                <button className="btn btn-sm btn-primary me-2">
+                                <button
+                                  className="btn btn-sm btn-primary me-2"
+                                  onClick={() => handleEditJugador(jugador)}
+                                >
                                   ✏️
                                 </button>
-                                <button className="btn btn-sm btn-danger">❌</button>
+                                <button
+                                  className="btn btn-sm btn-danger"
+                                  onClick={() =>
+                                    handleDeleteJugador(jugador.id)
+                                  }
+                                >
+                                  ❌
+                                </button>
                               </td>
                             </tr>
                           ))}
