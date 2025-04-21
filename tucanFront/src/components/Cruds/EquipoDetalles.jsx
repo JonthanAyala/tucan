@@ -15,12 +15,15 @@ const EquipoDetalle = ({ id }) => {
   const [eventos, setEventos] = useState([]);
   const currentUserId = localStorage.getItem("id");
   const [posiciones, setPosiciones] = useState([]);
+  const [victorias, setVictorias] = useState(0);
+  const [derrotas, setDerrotas] = useState(0);
+  const [empates, setEmpates] = useState(0);
+  const [efectividad, setEfectividad] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-
         const resEquipo = await peticion(apiClient, `/equipos/api/${id}/`);
 
         const resDeportes = await peticion(apiClient, `/deportes/api/`);
@@ -69,6 +72,30 @@ const EquipoDetalle = ({ id }) => {
 
         setEventos(eventosConNombres);
 
+        // Calcular estadísticas
+        const victorias = eventosConNombres.filter(
+          (evento) =>
+            (evento.resultado_equipo === "Ganó" && evento.equipo1 === id) ||
+            (evento.resultado_equipo === "Perdió" && evento.equipo2 === id)
+        ).length;
+
+        const derrotas = eventosConNombres.filter(
+          (evento) =>
+            (evento.resultado_equipo === "Perdió" && evento.equipo1 === id) ||
+            (evento.resultado_equipo === "Ganó" && evento.equipo2 === id)
+        ).length;
+
+        const empates = eventosConNombres.filter(
+          (evento) => evento.resultado_equipo === "Empató"
+        ).length;
+
+        const totalPartidos = victorias + derrotas + empates;
+        const efectividad = totalPartidos > 0 ? ((victorias / totalPartidos) * 100).toFixed(2) : 0;
+
+        setVictorias(victorias);
+        setDerrotas(derrotas);
+        setEmpates(empates);
+        setEfectividad(efectividad);
       } catch (error) {
         console.error("Error al cargar los datos:", error);
         Swal.fire("Error", "No se pudo cargar la información del equipo", "error");
@@ -173,7 +200,7 @@ const EquipoDetalle = ({ id }) => {
   }
 
   return (
-    <div className="d-flex justify-content-center align-items-center min-vh-100 p-2 p-lg-3">
+    <div className="d-flex justify-content-center align-items-center min-vh-100 p-2 p-lg-3" >
       <div className="card p-2 p-lg-4 shadow-lg" style={{
         maxWidth: "1400px",
         maxHeight: "100vh",
@@ -184,8 +211,32 @@ const EquipoDetalle = ({ id }) => {
         <div className="card-body p-0 p-lg-2">
           <div className="container-fluid px-0">
             <div className="row g-2 g-lg-4">
-
-              <div className="col-12 col-xxl-5 d-flex">
+              <div className="col-12">
+                <div className="card p-2 p-lg-3 shadow-sm w-100 mb-4">
+                  <div className="card-header bg-light py-2 py-lg-3">
+                    <h4 className="text-center mb-0 fs-5 fs-lg-4">Estadísticas Generales</h4>
+                  </div>
+                  <div className="card-body d-flex flex-wrap justify-content-around align-items-center">
+                    <div className="text-center m-2" style={{ minWidth: "120px" }}>
+                      <h5 className="text-success mb-1">{victorias}</h5>
+                      <p className="mb-0">Victorias</p>
+                    </div>
+                    <div className="text-center m-2" style={{ minWidth: "120px" }}>
+                      <h5 className="text-danger mb-1">{derrotas}</h5>
+                      <p className="mb-0">Derrotas</p>
+                    </div>
+                    <div className="text-center m-2" style={{ minWidth: "120px" }}>
+                      <h5 className="text-primary mb-1">{empates}</h5>
+                      <p className="mb-0">Empates</p>
+                    </div>
+                    <div className="text-center m-2" style={{ minWidth: "120px" }}>
+                      <h5 className="text-purple mb-1">{efectividad}%</h5>
+                      <p className="mb-0">Efectividad</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="col-12 col-lg-4">
                 <div className="card p-2 p-lg-3 shadow-sm w-100 d-flex flex-column" style={{
                   height: "500px"
                 }}>
@@ -221,78 +272,75 @@ const EquipoDetalle = ({ id }) => {
                   </div>
                 </div>
               </div>
-
-              <div className="col-12 col-xxl-3 d-flex">
-  <div className="card p-2 p-lg-3 shadow-sm w-100 d-flex flex-column" style={{
-    height: "500px" // Altura fija como en la card de Jugadores
-  }}>
-    <div className="card-header bg-light py-2 py-lg-3">
-      <h4 className="text-center mb-0 fs-5 fs-lg-4">Partidos</h4>
-    </div>
-    <div className="card-body p-1 p-lg-2" style={{
-      overflowY: "auto", // Habilitar scroll vertical
-      flex: "1 1 auto"   // Permitir que el contenido ocupe el espacio restante
-    }}>
-      {eventos.length === 0 ? (
-        <p className="text-muted text-center my-2 my-lg-3">No hay eventos registrados</p>
-      ) : (
-        <ul className="list-group list-group-flush">
-          {eventos.map((evento) => (
-            <li
-              key={evento.id}
-              className="list-group-item d-flex justify-content-between align-items-center py-2"
-              style={{ cursor: "pointer" }}
-              onClick={() =>
-                Swal.fire({
-                  title: `${evento.nombre}`,
-                  html: `<strong>${equipo.id === evento.equipo1 ? evento.equipo1_nombre : evento.equipo2_nombre} vs ${equipo.id === evento.equipo1 ? evento.equipo2_nombre : evento.equipo1_nombre}</strong><br/>Deporte: ${equipo.deporte_nombre}<br/>Fecha: ${new Date(evento.fecha).toLocaleDateString()}<br/>Resultado: ${evento.resultado_equipo || "Pendiente"}<br/>${
-                    evento.puntos_equipo1 != null && evento.puntos_equipo2 != null
-                      ? `Puntos: ${
-                          equipo.id === evento.equipo1
-                            ? `${evento.puntos_equipo1} - ${evento.puntos_equipo2}`
-                            : `${evento.puntos_equipo2} - ${evento.puntos_equipo1}`
-                        }<br/>`
-                      : ""
-                  }`,
-                  icon: "info",
-                  confirmButtonText: "Cerrar",
-                })
-              }
-            >
-              <div className="text-truncate">
-                <strong className="d-block text-truncate">
-                  {equipo.id === evento.equipo1
-                    ? `${evento.equipo1_nombre} vs ${evento.equipo2_nombre}`
-                    : `${evento.equipo2_nombre} vs ${evento.equipo1_nombre}`}
-                </strong>
-                <small className="text-muted d-block">
-                  {new Date(evento.fecha) > new Date()
-                    ? `Fecha: ${new Date(evento.fecha).toLocaleDateString()}`
-                    : evento.resultado_equipo || "pene"}
-                </small>
+              <div className="col-12 col-lg-4">
+                <div className="card p-2 p-lg-3 shadow-sm w-100 d-flex flex-column" style={{
+                  height: "500px"
+                }}>
+                  <div className="card-header bg-light py-2 py-lg-3">
+                    <h4 className="text-center mb-0 fs-5 fs-lg-4">Partidos</h4>
+                  </div>
+                  <div className="card-body p-1 p-lg-2" style={{
+                    overflowY: "auto",
+                    flex: "1 1 auto"
+                  }}>
+                    {eventos.length === 0 ? (
+                      <p className="text-muted text-center my-2 my-lg-3">No hay eventos registrados</p>
+                    ) : (
+                      <ul className="list-group list-group-flush">
+                        {eventos.map((evento) => (
+                          <li
+                            key={evento.id}
+                            className="list-group-item d-flex justify-content-between align-items-center py-2"
+                            style={{ cursor: "pointer" }}
+                            onClick={() =>
+                              Swal.fire({
+                                title: `${evento.nombre}`,
+                                html: `<strong>${equipo.id === evento.equipo1 ? evento.equipo1_nombre : evento.equipo2_nombre} vs ${equipo.id === evento.equipo1 ? evento.equipo2_nombre : evento.equipo1_nombre}</strong><br/>Deporte: ${equipo.deporte_nombre}<br/>Fecha: ${new Date(evento.fecha).toLocaleDateString()}<br/>Resultado: ${evento.resultado_equipo || "Pendiente"}<br/>${evento.puntos_equipo1 != null && evento.puntos_equipo2 != null
+                                  ? `Puntos: ${equipo.id === evento.equipo1
+                                    ? `${evento.puntos_equipo1} - ${evento.puntos_equipo2}`
+                                    : `${evento.puntos_equipo2} - ${evento.puntos_equipo1}`
+                                  }<br/>`
+                                  : ""
+                                  }`,
+                                icon: "info",
+                                confirmButtonText: "Cerrar",
+                              })
+                            }
+                          >
+                            <div className="text-truncate">
+                              <strong className="d-block text-truncate">
+                                {equipo.id === evento.equipo1
+                                  ? `${evento.equipo1_nombre} vs ${evento.equipo2_nombre}`
+                                  : `${evento.equipo2_nombre} vs ${evento.equipo1_nombre}`}
+                              </strong>
+                              <small className="text-muted d-block">
+                                {new Date(evento.fecha) > new Date()
+                                  ? `Fecha: ${new Date(evento.fecha).toLocaleDateString()}`
+                                  : evento.resultado_equipo || "pendnte"}
+                              </small>
+                            </div>
+                            <span
+                              className={`badge rounded-pill ms-2 ${new Date(evento.fecha) > new Date()
+                                ? "bg-warning"
+                                : evento.resultado
+                                  ? "bg-secondary"
+                                  : "bg-primary"
+                                }`}
+                            >
+                              {new Date(evento.fecha) > new Date()
+                                ? "Próximo"
+                                : equipo.id === evento.equipo1
+                                  ? `${evento.puntos_equipo1} - ${evento.puntos_equipo2}`
+                                  : `${evento.puntos_equipo2} - ${evento.puntos_equipo1}` || "Pendiente"}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
               </div>
-              <span
-                className={`badge rounded-pill ms-2 ${new Date(evento.fecha) > new Date()
-                    ? "bg-warning"
-                    : evento.resultado
-                      ? "bg-secondary"
-                      : "bg-primary"
-                  }`}
-              >
-                {new Date(evento.fecha) > new Date()
-                  ? "Próximo"
-                  : equipo.id === evento.equipo1
-                    ? `${evento.puntos_equipo1} - ${evento.puntos_equipo2}`
-                    : `${evento.puntos_equipo2} - ${evento.puntos_equipo1}` || "Pendiente"}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  </div>
-</div>
-              <div className="col-12 col-xxl-4 d-flex">
+              <div className="col-12 col-lg-4">
                 <div className="card h-100 p-2 p-lg-3 shadow-sm w-100 d-flex flex-column">
                   <div className="card-header bg-light py-2 py-lg-3">
                     <h4 className="text-center mb-0 fs-5 fs-lg-4">Información General Del Equipo</h4>
@@ -544,7 +592,6 @@ const EquipoDetalle = ({ id }) => {
           </div>
         </div>
       </div>
-
     </div>
   );
 };
