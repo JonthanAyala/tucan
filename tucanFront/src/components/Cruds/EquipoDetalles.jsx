@@ -34,6 +34,9 @@ const EquipoDetalle = ({ id }) => {
         const deporte = deportes.find((d) => Number(d.id) === Number(equipoActualizado.deporte));
         equipoActualizado.deporte_nombre = deporte ? deporte.nombre : "Desconocido";
 
+        const resEntrenador = await peticion(apiClient, `/usuarios/api/${equipoActualizado.entrenador}/`);
+        equipoActualizado.entrenador_nombre = resEntrenador.data.nombre;
+        
         setEquipo(equipoActualizado);
         setDeportes(deportes);
 
@@ -188,7 +191,10 @@ const EquipoDetalle = ({ id }) => {
         width: "100%",
         overflow: "auto"
       }}>
-        <h1 className="text-center mb-2 mb-lg-4 fs-3 fs-lg-2">{equipo.nombre}</h1>
+           <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="text-center fs-3 fs-lg-2">{equipo.nombre}</h1>
+        <h5 className="text-muted">Entrenador: {equipo.entrenador_nombre}</h5>
+      </div>
         <div className="card-body p-0 p-lg-2">
           <div className="container-fluid px-0">
             <div className="row g-2 g-lg-4">
