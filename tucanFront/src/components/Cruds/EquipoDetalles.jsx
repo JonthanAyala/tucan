@@ -47,6 +47,9 @@ const EquipoDetalle = ({ id }) => {
           ? deporte.nombre
           : "Desconocido";
 
+        const resEntrenador = await peticion(apiClient, `/usuarios/api/${equipoActualizado.entrenador}/`);
+        equipoActualizado.entrenador_nombre = resEntrenador.data.nombre;
+        
         setEquipo(equipoActualizado);
         setDeportes(deportes);
 
@@ -64,6 +67,7 @@ const EquipoDetalle = ({ id }) => {
 
         const resEventos = await peticion(apiClient, `/eventos/equipo/${id}/`);
         const eventos = resEventos.data.eventos;
+        const estadisticas = resEventos.data.estadisticas;
 
         // Obtener nombres de los equipos para cada evento
         const eventosConNombres = await Promise.all(
@@ -86,6 +90,7 @@ const EquipoDetalle = ({ id }) => {
 
         setEventos(eventosConNombres);
 
+<<<<<<< HEAD
         // Calcular estadísticas
         const victorias = eventosConNombres.filter(
           (evento) =>
@@ -123,6 +128,12 @@ const EquipoDetalle = ({ id }) => {
         setDerrotas(derrotas);
         setEmpates(empates);
         setEfectividad(efectividad);
+=======
+        setVictorias(estadisticas.victorias);
+        setDerrotas(estadisticas.derrotas);
+        setEmpates(estadisticas.empates);
+        setEfectividad(estadisticas.efectividad);
+>>>>>>> f7d6d50bc9b2e225dfc25131a7dca0a6069ad0e0
       } catch (error) {
         console.error("Error al cargar los datos:", error);
         Swal.fire(
@@ -302,19 +313,17 @@ const EquipoDetalle = ({ id }) => {
   }
 
   return (
-    <div className="d-flex justify-content-center align-items-center min-vh-100 p-2 p-lg-3">
-      <div
-        className="card p-2 p-lg-4 shadow-lg"
-        style={{
-          maxWidth: "1400px",
-          maxHeight: "100vh",
-          width: "100%",
-          overflow: "auto",
-        }}
-      >
-        <h1 className="text-center mb-2 mb-lg-4 fs-3 fs-lg-2">
-          {equipo.nombre}
-        </h1>
+    <div className="d-flex justify-content-center align-items-center min-vh-100 p-2 p-lg-3" >
+      <div className="card p-2 p-lg-4 shadow-lg" style={{
+        maxWidth: "1400px",
+        maxHeight: "100vh",
+        width: "100%",
+        overflow: "auto"
+      }}>
+           <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="text-center fs-3 fs-lg-2">{equipo.nombre}</h1>
+        <h5 className="text-muted">Entrenador: {equipo.entrenador_nombre}</h5>
+      </div>
         <div className="card-body p-0 p-lg-2">
           <div className="container-fluid px-0">
             <div className="row g-2 g-lg-4">
