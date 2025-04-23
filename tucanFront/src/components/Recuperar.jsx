@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import 'sweetalert2/dist/sweetalert2.min.css';
 
@@ -79,6 +79,11 @@ const Recuperar = () => {
             required
           />
           <button className="btn btn-primary w-100" type="submit">Enviar</button>
+          <p className="text-center mb-0">  
+          <Link className="mt-2" to="/login">
+      Regresar al Login
+    </Link>
+          </p>
         </form>
       </div>
     </motion.div>
