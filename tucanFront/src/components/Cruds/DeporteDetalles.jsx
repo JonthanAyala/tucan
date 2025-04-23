@@ -222,7 +222,10 @@ const DeporteDetalles = ({ id }) => {
 
   if (!deporte) {
     return (
-      <div className="text-center py-4">Por favor selecciona un Deporte</div>
+      <div className="text-center mt-4 text-muted">
+      <i className="bi bi-exclamation-circle fs-1 d-block mb-2"></i>
+      <h5>Por favor selecciona un equipo para ver sus detalles</h5>
+    </div>
     );
   }
 

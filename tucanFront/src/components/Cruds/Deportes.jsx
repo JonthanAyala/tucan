@@ -152,9 +152,9 @@ const Deportes = ({ onNavigate }) => {
 
   return (
     <div>
-      <h3 className="mb-3">Configuración de Deportes</h3>
-      <button className="btn btn-success mb-3" onClick={handleCreate}>
-        <i className="bi bi-plus"></i> Crear configuración
+     <h2 className="fw-bold mb-4">Tabla de equipos</h2>
+      <button className="btn btn-success mb-4 rounded-pill px-4 py-2 shadow-sm d-flex align-items-center gap-2" onClick={handleCreate}>
+        <i className="bi bi-plus-lg"></i> Crear equipo
       </button>
 
       {loading ? (
@@ -163,9 +163,9 @@ const Deportes = ({ onNavigate }) => {
         <div className="row">
           {data.map((config) => (
             <div className="col-md-4 mb-4" key={config.deporte.id}>
-              <div className="card h-100 shadow-sm">
+              <div className="card h-100 shadow-sm border-2 rounded-4 overflow-hidden">
                 <div className="card-body">
-                  <h5 className="card-title">{config.deporte.nombre}</h5>
+                  <h5 className="card-title fw-bold">{config.deporte.nombre}</h5>
                   <p>
                     <strong>Máx. Titulares:</strong> {config.max_titulares}
                   </p>
@@ -173,15 +173,15 @@ const Deportes = ({ onNavigate }) => {
                     <strong>Máx. Suplentes:</strong> {config.max_suplentes}
                   </p>
                 </div>
-                <div className="card-footer d-flex justify-content-between">
+                <div className="card-footer d-flex justify-content-between border-0 bg-light">
                   <button
-                    className="btn btn-primary btn-sm"
+                    className="btn btn-sm rounded-pill px-3 btn-outline-primary"
                     onClick={() => handleViewDetails(config)}
                   >
                     VER INFORMACIÖN
                   </button>
                   <button
-                    className="btn btn-danger btn-sm"
+                    className="btn btn-sm rounded-pill px-3 btn-outline-danger"
                     onClick={() => handleDelete(config.deporte.id)}
                   >
                     Eliminar
