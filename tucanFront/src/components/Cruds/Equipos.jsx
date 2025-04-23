@@ -12,6 +12,8 @@ const Equipos = ({ onNavigate }) => {
   const [logoFile, setLogoFile] = useState(null);
   const [deportes, setDeportes] = useState([]);
   const [mostrarActivos, setMostrarActivos] = useState(true);
+  const [invalid, setInvalid] = useState({});
+
   const currentUserId = localStorage.getItem("id");
   const navi = useNavigate();
   const prefijo = "/equipos/api/";
@@ -340,7 +342,6 @@ const Equipos = ({ onNavigate }) => {
           </div>
         )}
       </div>
-
       {showModal && (
         <div className="modal d-block bg-dark bg-opacity-50" tabIndex="-1" role="dialog">
           <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
@@ -366,23 +367,25 @@ const Equipos = ({ onNavigate }) => {
                     <label className="form-label">Nombre <span className="text-danger">*</span></label>
                     <input
                       type="text"
-                      className="form-control"
+                      className={`form-control ${invalid?.nombre ? "is-invalid" : ""}`}
                       name="nombre"
                       value={currentData.nombre || ""}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (/^[a-zA-Z0-9\s]*$/.test(value)) {
+                        if (/^[a-zA-ZÀ-ÿñÑ\s]*$/.test(value) || value === "") {
+                          setInvalid({ ...invalid, nombre: false }); 
                           handleInputChange(e);
                         } else {
-                          Swal.fire(
-                            "Nombre inválido",
-                            "El nombre solo puede contener letras, números y espacios.",
-                            "error"
-                          );
+                          setInvalid({ ...invalid, nombre: true }); 
                         }
                       }}
                       required
                     />
+                    {invalid?.nombre && (
+                      <div className="invalid-feedback">
+                        El nombre solo puede contener letras, números y espacios.
+                      </div>
+                    )}
                   </div>
 
                   <div className="col-md-6">
@@ -408,44 +411,48 @@ const Equipos = ({ onNavigate }) => {
                   <div className="col-md-12">
                     <label className="form-label">Descripción</label>
                     <textarea
-                      className="form-control"
+                      className={`form-control ${invalid?.descripcion ? "is-invalid" : ""}`}
                       name="descripcion"
                       rows="3"
                       value={currentData.descripcion || ""}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (/^[a-zA-Z0-9\s.,]*$/.test(value)) {
+                        if (/^[a-zA-ZÀ-ÿñÑ\s]*$/.test(value) || value === "") {
+                          setInvalid({ ...invalid, descripcion: false });
                           handleInputChange(e);
                         } else {
-                          Swal.fire(
-                            "Descripción inválida",
-                            "La descripción solo puede contener letras, números, espacios, puntos y comas.",
-                            "error"
-                          );
+                          setInvalid({ ...invalid, descripcion: true });
                         }
                       }}
                     ></textarea>
+                    {invalid?.descripcion && (
+                      <div className="invalid-feedback">
+                        La descripción solo puede contener letras, números, espacios, puntos y comas.
+                      </div>
+                    )}
                   </div>
                   <div className="col-md-6">
                     <label className="form-label">Ciudad</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className={`form-control ${invalid?.ciudad ? "is-invalid" : ""}`}
                       name="ciudad"
                       value={currentData.ciudad || ""}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (/^[a-zA-Z\s]*$/.test(value)) {
+                        if (/^[a-zA-ZÀ-ÿñÑ\s]*$/.test(value) || value === "") {
+                          setInvalid({ ...invalid, ciudad: false });
                           handleInputChange(e);
                         } else {
-                          Swal.fire(
-                            "Ciudad inválida",
-                            "La ciudad solo puede contener letras y espacios.",
-                            "error"
-                          );
+                          setInvalid({ ...invalid, ciudad: true });
                         }
                       }}
                     />
+                    {invalid?.ciudad && (
+                      <div className="invalid-feedback">
+                        La ciudad solo puede contener letras y espacios.
+                      </div>
+                    )}
                   </div>
 
                   <div className="col-md-6">

@@ -18,6 +18,7 @@ const EquipoDetalle = ({ id }) => {
   const [victorias, setVictorias] = useState(0);
   const [derrotas, setDerrotas] = useState(0);
   const [empates, setEmpates] = useState(0);
+  const [invalid, setInvalid] = useState({});
   const [efectividad, setEfectividad] = useState(0);
   const [nuevoJugador, setNuevoJugador] = useState({
     id: null,
@@ -612,8 +613,8 @@ const EquipoDetalle = ({ id }) => {
                               Swal.fire({
                                 title: `${evento.nombre}`,
                                 html: `<strong>${equipo.id === evento.equipo1
-                                    ? evento.equipo1_nombre
-                                    : evento.equipo2_nombre
+                                  ? evento.equipo1_nombre
+                                  : evento.equipo2_nombre
                                   } vs ${equipo.id === evento.equipo1
                                     ? evento.equipo2_nombre
                                     : evento.equipo1_nombre
@@ -650,10 +651,10 @@ const EquipoDetalle = ({ id }) => {
                             </div>
                             <span
                               className={`badge rounded-pill ms-2 ${new Date(evento.fecha) > new Date()
-                                  ? "bg-warning"
-                                  : evento.resultado
-                                    ? "bg-secondary"
-                                    : "bg-primary"
+                                ? "bg-warning"
+                                : evento.resultado
+                                  ? "bg-secondary"
+                                  : "bg-primary"
                                 }`}
                             >
                               {new Date(evento.fecha) > new Date()
@@ -746,14 +747,28 @@ const EquipoDetalle = ({ id }) => {
                     <div className="modal-body">
                       <form className="row g-3">
                         <div className="col-md-6">
-                          <label className="form-label">Nombre</label>
+                          <label className="form-label">Nombre </label>
                           <input
                             type="text"
-                            className="form-control"
+                            className={`form-control ${invalid?.nombre ? "is-invalid" : ""}`}
                             name="nombre"
                             value={editableEquipo.nombre || ""}
-                            onChange={handleInputChange}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (/^[a-zA-ZÀ-ÿñÑ\s]*$/.test(value) || value === "") {
+                                setInvalid({ ...invalid, nombre: false });
+                                handleInputChange(e);
+                              } else {
+                                setInvalid({ ...invalid, nombre: true });
+                              }
+                            }}
+                            required
                           />
+                          {invalid?.nombre && (
+                            <div className="invalid-feedback">
+                              El nombre solo puede contener letras, espacios, la ñ y acentos.
+                            </div>
+                          )}
                         </div>
                         <div className="col-md-6">
                           <label className="form-label">Logo (imagen)</label>
@@ -764,11 +779,10 @@ const EquipoDetalle = ({ id }) => {
                             onChange={handleFileChange}
                           />
                         </div>
-                        {/* Mostrar la imagen actual o la vista previa */}
                         {(logoPreview || editableEquipo.logo) && (
                           <div className="text-center my-2">
                             <img
-                              src={logoPreview || editableEquipo.logo} // Mostrar la vista previa si existe, de lo contrario, el logo actual
+                              src={logoPreview || editableEquipo.logo}
                               alt="Vista previa"
                               style={{
                                 maxHeight: "150px",
@@ -780,21 +794,48 @@ const EquipoDetalle = ({ id }) => {
                         <div className="col-md-12">
                           <label className="form-label">Descripción</label>
                           <textarea
-                            className="form-control"
+                            className={`form-control ${invalid?.descripcion ? "is-invalid" : ""}`}
                             name="descripcion"
                             value={editableEquipo.descripcion || ""}
-                            onChange={handleInputChange}
-                          />
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (/^[a-zA-ZÀ-ÿñÑ\s.,]*$/.test(value) || value === "") {
+                                setInvalid({ ...invalid, descripcion: false });
+                                handleInputChange(e);
+                              } else {
+                                setInvalid({ ...invalid, descripcion: true });
+                              }
+                            }}
+                          ></textarea>
+                          {invalid?.descripcion && (
+                            <div className="invalid-feedback">
+                              La descripción solo puede contener letras, espacios, puntos, comas, la ñ y acentos.
+                            </div>
+                          )}
                         </div>
+
                         <div className="col-md-6">
                           <label className="form-label">Ciudad</label>
                           <input
                             type="text"
-                            className="form-control"
+                            className={`form-control ${invalid?.ciudad ? "is-invalid" : ""}`}
                             name="ciudad"
                             value={editableEquipo.ciudad || ""}
-                            onChange={handleInputChange}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (/^[a-zA-ZÀ-ÿñÑ\s]*$/.test(value) || value === "") {
+                                setInvalid({ ...invalid, ciudad: false }); 
+                                handleInputChange(e);
+                              } else {
+                                setInvalid({ ...invalid, ciudad: true }); 
+                              }
+                            }}
                           />
+                          {invalid?.ciudad && (
+                            <div className="invalid-feedback">
+                              La ciudad solo puede contener letras, espacios, la ñ y acentos.
+                            </div>
+                          )}
                         </div>
                         <div className="col-md-6">
                           <label className="form-label">Deporte</label>
@@ -883,66 +924,120 @@ const EquipoDetalle = ({ id }) => {
                       ></button>
                     </div>
                     <div className="modal-body">
-                      {/* Formulario para agregar jugadores  Falta mejorarlo*/}
                       <div className="mb-3 d-flex">
-                        <input
-                          type="text"
-                          className="form-control me-2"
-                          placeholder="Nombre"
-                          value={nuevoJugador.nombre}
-                          onChange={(e) =>
-                            setNuevoJugador({
-                              ...nuevoJugador,
-                              nombre: e.target.value,
-                            })
-                          }
-                        />
-                        <input
-                          type="date"
-                          className="form-control me-2"
-                          placeholder="Fecha de Nacimiento"
-                          value={nuevoJugador.fecha_nacimiento}
-                          onChange={(e) =>
-                            setNuevoJugador({
-                              ...nuevoJugador,
-                              fecha_nacimiento: e.target.value,
-                            })
-                          }
-                        />
-                        <select
-                          className="form-select me-2"
-                          value={nuevoJugador.posicion}
-                          onChange={(e) =>
-                            setNuevoJugador({
-                              ...nuevoJugador,
-                              posicion: e.target.value,
-                            })
-                          }
-                        >
-                          <option value="">Posición</option>
-                          {posiciones.map((posicion) => (
-                            <option key={posicion.id} value={posicion.id}>
-                              {posicion.nombre}
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          type="checkbox"
-                          className="form-check-input me-2"
-                          checked={nuevoJugador.es_titular}
-                          onChange={(e) =>
-                            setNuevoJugador({
-                              ...nuevoJugador,
-                              es_titular: e.target.checked,
-                            })
-                          }
-                        />
-                        <button
-                          className="btn btn-success"
-                          onClick={handleSaveJugador}
-                        >
-                          {editarJugador ? "Actualizar" : "Agregar"}
-                        </button>
+                        <form className="row g-3">
+                          <div className="col-md-6">
+                            <label className="form-label">Nombre <span className="text-danger">*</span></label>
+                            <input
+                              type="text"
+                              className={`form-control ${invalid?.nombre ? "is-invalid" : ""}`}
+                              name="nombre"
+                              value={nuevoJugador.nombre || ""}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (/^[a-zA-ZÀ-ÿñÑ\s]*$/.test(value) || value === "") {
+                                  setInvalid({ ...invalid, nombre: false }); 
+                                  setNuevoJugador({ ...nuevoJugador, nombre: value });
+                                } else {
+                                  setInvalid({ ...invalid, nombre: true });
+                                }
+                              }}
+                              required
+                            />
+                            {invalid?.nombre && (
+                              <div className="invalid-feedback">
+                                El nombre solo puede contener letras, espacios, la ñ y acentos.
+                              </div>
+                            )}
+                          </div>
+                          <div className="col-md-6">
+                            <label className="form-label">Fecha de Nacimiento <span className="text-danger">*</span></label>
+                            <input
+                              type="date"
+                              className={`form-control ${invalid?.fecha_nacimiento ? "is-invalid" : ""}`}
+                              name="fecha_nacimiento"
+                              value={nuevoJugador.fecha_nacimiento || ""}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                const fechaNacimiento = new Date(value);
+                                const hoy = new Date();
+                                const edadMinima = 15;
+                                const fechaLimite = new Date();
+                                fechaLimite.setFullYear(hoy.getFullYear() - edadMinima);
+
+                                if (fechaNacimiento <= hoy && fechaNacimiento <= fechaLimite) {
+                                  setInvalid({ ...invalid, fecha_nacimiento: false }); 
+                                  setNuevoJugador({ ...nuevoJugador, fecha_nacimiento: value });
+                                } else {
+                                  setInvalid({ ...invalid, fecha_nacimiento: true }); 
+                                }
+                              }}
+                              required
+                            />
+                            {invalid?.fecha_nacimiento && (
+                              <div className="invalid-feedback">
+                                La fecha de nacimiento debe ser válida y el jugador debe tener al menos 15 años.
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="col-md-6">
+                            <label className="form-label">Posición <span className="text-danger">*</span></label>
+                            <select
+                              className={`form-select ${invalid?.posicion ? "is-invalid" : ""}`}
+                              name="posicion"
+                              value={nuevoJugador.posicion || ""}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value) {
+                                  setInvalid({ ...invalid, posicion: false });
+                                  setNuevoJugador({ ...nuevoJugador, posicion: value });
+                                } else {
+                                  setInvalid({ ...invalid, posicion: true }); 
+                                }
+                              }}
+                              required
+                            >
+                              <option value="">Selecciona una posición</option>
+                              {posiciones.map((posicion) => (
+                                <option key={posicion.id} value={posicion.id}>
+                                  {posicion.nombre}
+                                </option>
+                              ))}
+                            </select>
+                            {invalid?.posicion && (
+                              <div className="invalid-feedback">
+                                Por favor selecciona una posición válida.
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="col-md-6 d-flex align-items-center">
+                            <label className="form-label me-3">¿Es Titular?</label>
+                            <div className="form-check form-switch me-3">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                id="esTitularSwitch"
+                                checked={nuevoJugador.es_titular || false}
+                                onChange={(e) =>
+                                  setNuevoJugador({ ...nuevoJugador, es_titular: e.target.checked })
+                                }
+                              />
+                              <label className="form-check-label" htmlFor="esTitularSwitch">
+                                {nuevoJugador.es_titular ? "Sí" : "No"}
+                              </label>
+                            </div>
+                            <button
+                              className="btn btn-success ms-5"
+                              onClick={handleSaveJugador}
+                            >
+                              {editarJugador ? "Actualizar" : "Agregar"}
+                            </button>
+                          </div>
+
+                        </form>
+
                       </div>
 
                       <table className="table table-striped">
@@ -986,6 +1081,7 @@ const EquipoDetalle = ({ id }) => {
                       </table>
                     </div>
                     <div className="modal-footer">
+                    
                       <button
                         className="btn btn-secondary"
                         onClick={() => setShowJugadoresModal(false)}
