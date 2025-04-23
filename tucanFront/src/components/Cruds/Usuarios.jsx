@@ -14,7 +14,6 @@ const Usuarios = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const currentUserId = localStorage.getItem("id");
   const [invalid, setInvalid] = useState({});
-  const [countErrrors, setCountErrors] = useState(0);
   const navi = useNavigate();
 
   useEffect(() => {
@@ -73,20 +72,17 @@ const Usuarios = () => {
       : `/usuarios/api/`;
     const metodo = esEdicion ? "put" : "post";
 
-    setCountErrors(0); // Reinicia el contador de errores
-    Object.keys(invalid).forEach((key) => {
-      if(invalid[key] === true) {
-        setCountErrors((prevCount) => prevCount + 1);
-      }
-    });
-    if (countErrrors > 0) {
-      MySwal.fire(
+    const errorCount = Object.values(invalid).filter((value) => value === true).length;
+
+    if (errorCount > 0) {
+      Swal.fire(
         "Error",
         "Por favor, corrige los errores antes de guardar.",
         "error"
       );
       return;
     }
+
 
     peticion(apiClient, ruta, metodo, currentUser)
       .then((res) => {
@@ -206,12 +202,12 @@ const Usuarios = () => {
                       value={currentUser.nombre || ""}
                       onChange={(e) => {
                         const value = e.target.value;
+                        handleInputChange(e);
                         if (
                           /^[a-zA-ZÀ-ÿ\s]{0,100}$/.test(value) ||
                           value === ""
                         ) {
                           setInvalid({ ...invalid, nombre: false }); // Marca como válido
-                          handleInputChange(e);
                         } else {
                           setInvalid({ ...invalid, nombre: true }); // Marca como inválido
                         }
@@ -234,15 +230,14 @@ const Usuarios = () => {
                       value={currentUser.apellidos || ""}
                       onChange={(e) => {
                         const value = e.target.value;
+                        handleInputChange(e);
                         if (
                           /^[a-zA-ZÀ-ÿ\s]{0,50}$/.test(value) ||
                           value === ""
                         ) {
                           setInvalid({ ...invalid, apellidos: false });
-                          handleInputChange(e);
                         } else {
                           setInvalid({ ...invalid, apellidos: true });
-                          
                         }
                       }}
                     />
@@ -263,15 +258,14 @@ const Usuarios = () => {
                       value={currentUser.username || ""}
                       onChange={(e) => {
                         const value = e.target.value;
+                        handleInputChange(e);
                         if (
                           /^[a-zA-Z0-9_]{0,45}$/.test(value) ||
                           value === ""
                         ) {
                           setInvalid({ ...invalid, username: false });
-                          handleInputChange(e);
                         } else {
                           setInvalid({ ...invalid, username: true });
-                          handleInputChange(e);
                         }
                       }}
                     />
@@ -301,7 +295,6 @@ const Usuarios = () => {
                             value === ""
                           ) {
                             setInvalid({ ...invalid, email: false });
-                            handleInputChange(e);
                           } else {
                             setInvalid({ ...invalid, email: true });
                           }
@@ -330,7 +323,6 @@ const Usuarios = () => {
                               value === "entrenador"
                             ) {
                               setInvalid({ ...invalid, rol: false });
-                              handleInputChange(e);
                             } else {
                               setInvalid({ ...invalid, rol: true });
                             }
@@ -370,7 +362,6 @@ const Usuarios = () => {
                                 value === ""
                               ) {
                                 setInvalid({ ...invalid, password: false });
-                                handleInputChange(e);
                               } else {
                                 setInvalid({ ...invalid, password: true });
                               }
@@ -401,7 +392,6 @@ const Usuarios = () => {
                                 value === ""
                               ) {
                                 setInvalid({ ...invalid, confirmPassword: false });
-                                handleInputChange(e);
                               } else {
                                 setInvalid({ ...invalid, confirmPassword: true });
                               }
@@ -430,7 +420,6 @@ const Usuarios = () => {
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => {
-                    setCountErrors(0);
                     setInvalid({});
                     setShowModal(false);
                     setCurrentUser(null);
