@@ -13,7 +13,7 @@ const Eventos = () => {
     const prefijo = "/eventos/api/";
     const prefijoEquipos = "/equipos/api/";
     const prefijoDeportes = "/deportes/api/";
-    
+
     const getEquipoNombre = (id) => {
         const equipo = equipos.find((e) => e.id === id);
         return equipo ? equipo.nombre : "Desconocido";
@@ -27,21 +27,21 @@ const Eventos = () => {
     useEffect(() => {
         fetchData();
     }, []);
-    
+
     const fetchData = async () => {
         try {
             const respDeportes = await peticion(apiClient, prefijoDeportes);
             setDeportes(respDeportes.data);
-    
+
             const respEquipos = await peticion(apiClient, prefijoEquipos);
             setEquipos(respEquipos.data);
-    
+
             const respEventos = await peticion(apiClient, prefijo);
             setData(respEventos.data);
             setLoading(false);
         } catch (error) {
             console.error("Error al cargar los datos:", error);
-    
+
             // Mostrar alerta de error con SweetAlert
             Swal.fire({
                 title: "Error al cargar los datos",
@@ -49,7 +49,7 @@ const Eventos = () => {
                 icon: "error",
                 confirmButtonText: "Aceptar",
             });
-    
+
             setLoading(false);
         }
     };
@@ -92,24 +92,24 @@ const Eventos = () => {
             Swal.fire("Campos incompletos", "Por favor completa todos los campos obligatorios.", "warning");
             return;
         }
-    
+
         if (currentData.equipo1 === currentData.equipo2) {
             Swal.fire("Error", "Un equipo no puede jugar contra sí mismo.", "error");
             return;
         }
-    
+
         const equipo1 = equipos.find((e) => e.id === parseInt(currentData.equipo1, 10));
         const equipo2 = equipos.find((e) => e.id === parseInt(currentData.equipo2, 10));
         if (equipo1?.deporte !== equipo2?.deporte) {
             Swal.fire("Error", "Los equipos deben pertenecer al mismo deporte.", "error");
             return;
         }
-    
+
         // Validación de la fecha del evento
         const fechaEvento = new Date(currentData.fecha);
         const fechaLimite = new Date();
         fechaLimite.setDate(fechaLimite.getDate() - 6);
-    
+
         if (fechaEvento < fechaLimite) {
             Swal.fire(
                 "Fecha inválida",
@@ -118,7 +118,7 @@ const Eventos = () => {
             );
             return;
         }
-    
+
         // Validación de puntos negativos
         if (currentData.puntos_equipo1 < 0 || currentData.puntos_equipo2 < 0) {
             Swal.fire(
@@ -128,7 +128,7 @@ const Eventos = () => {
             );
             return;
         }
-    
+
         let resultado = null;
         if (currentData.puntos_equipo1 === currentData.puntos_equipo2) {
             resultado = "Empate";
@@ -137,7 +137,7 @@ const Eventos = () => {
         } else if (currentData.puntos_equipo1 < currentData.puntos_equipo2) {
             resultado = `Ganador: ${getEquipoNombre(currentData.equipo2)}`;
         }
-    
+
         const datosAEnviar = {
             ...currentData,
             deporte: deporteSeleccionado ? parseInt(deporteSeleccionado, 10) : null,
@@ -147,7 +147,7 @@ const Eventos = () => {
             puntos_equipo2: currentData.puntos_equipo2,
             resultado,
         };
-    
+
         if (currentData.id) {
             peticion(apiClient, `${prefijo}${currentData.id}/`, "put", datosAEnviar)
                 .then((res) => {
@@ -161,7 +161,7 @@ const Eventos = () => {
                 })
                 .catch((error) => {
                     console.error("Error al actualizar el evento:", error);
-    
+
                     Swal.fire({
                         title: "Error al actualizar el evento",
                         text: error.response?.data?.error || "Ocurrió un error inesperado.",
@@ -178,7 +178,7 @@ const Eventos = () => {
                 })
                 .catch((error) => {
                     console.error("Error al crear el evento:", error);
-    
+
                     Swal.fire({
                         title: "Error al crear el evento",
                         text: error.response?.data?.error || "Ocurrió un error inesperado.",
@@ -220,7 +220,7 @@ const Eventos = () => {
 
     const handleDeporteChange = (e) => {
         setDeporteSeleccionado(e.target.value);
-        console.log("Deporte seleccionado:", e.target.value); 
+        console.log("Deporte seleccionado:", e.target.value);
     };
 
     const equiposFiltrados = equipos.filter(
@@ -251,6 +251,7 @@ const Eventos = () => {
                 </div>
             ) : (
                 <>
+                    {/* Próximos Eventos */}
                     <section className="mb-5">
                         <h4 className="text-center mb-3">Próximos Eventos</h4>
                         <hr className="mb-4" />
@@ -294,93 +295,93 @@ const Eventos = () => {
                                     </div>
                                 ))
                             ) : (
-                                    <p className="text-center text-muted">No hay próximos eventos</p>
-                                )}
-                            </div>
-                        </section>
+                                <p className="text-center text-muted">No hay próximos eventos</p>
+                            )}
+                        </div>
+                    </section>
 
-                        {/* Eventos Finalizados */}
-                        <section>
-                            <h4 className="text-center mb-3">Eventos Finalizados</h4>
-                            <hr className="mb-4" />
-                            <div className="row justify-content-center">
-                                {eventosFinalizados.length > 0 ? (
-                                    eventosFinalizados.map((evento, i) => {
-                                        const fechaEvento = new Date(evento.fecha);
-                                        const fechaLimiteEdicion = new Date(fechaEvento);
-                                        fechaLimiteEdicion.setDate(fechaEvento.getDate() + 6);
+                    {/* Eventos Finalizados */}
+                    <section>
+                        <h4 className="text-center mb-3">Eventos Finalizados</h4>
+                        <hr className="mb-4" />
+                        <div className="row justify-content-center">
+                            {eventosFinalizados.length > 0 ? (
+                                eventosFinalizados.map((evento, i) => {
+                                    const fechaEvento = new Date(evento.fecha);
+                                    const fechaLimiteEdicion = new Date(fechaEvento);
+                                    fechaLimiteEdicion.setDate(fechaEvento.getDate() + 6);
 
-                                        const puedeEditar = new Date() <= fechaLimiteEdicion;
+                                    const puedeEditar = new Date() <= fechaLimiteEdicion;
 
-                                        // Determinar el color del encabezado según el resultado
-                                        const headerClass =
-                                            evento.resultado === "Empate"
-                                                ? "bg-secondary text-white"
-                                                : "bg-success text-white";
+                                    // Determinar el color del encabezado según el resultado
+                                    const headerClass =
+                                        evento.resultado === "Empate"
+                                            ? "bg-secondary text-white"
+                                            : "bg-success text-white";
 
-                                        return (
-                                            <div className="col-md-4 mb-4" key={i}>
-                                                <div className="card shadow-sm border-0 rounded-4 h-100">
-                                                    <div className={`card-header text-center fw-bold ${headerClass}`}>
-                                                        {evento.resultado || "Resultado no disponible"}
-                                                    </div>
-                                                    <div className="card-body text-center">
-                                                        <h5 className="fw-bold mb-3">{evento.nombre}</h5>
-                                                        <h6 className="fw-semibold mb-3">
-                                                            <span
-                                                                className={`${evento.puntos_equipo1 > evento.puntos_equipo2
-                                                                        ? "text-success"
-                                                                        : evento.puntos_equipo1 < evento.puntos_equipo2
-                                                                            ? "text-danger"
-                                                                            : "text-secondary"
-                                                                    }`}
-                                                            >
-                                                                {getEquipoNombre(evento.equipo1)}
-                                                            </span>
-                                                            <span className="text-muted mx-2">vs</span>
-                                                            <span
-                                                                className={`${evento.puntos_equipo2 > evento.puntos_equipo1
-                                                                        ? "text-success"
-                                                                        : evento.puntos_equipo2 < evento.puntos_equipo1
-                                                                            ? "text-danger"
-                                                                            : "text-secondary"
-                                                                    }`}
-                                                            >
-                                                                {getEquipoNombre(evento.equipo2)}
-                                                            </span>
-                                                        </h6>
-                                                        <p className="fw-medium text-muted">Deporte: {getDeporteNombre(evento.deporte)}</p>
-                                                        <p className="text-muted mb-0">📅 Fecha del partido:</p>
-                                                        <p className="fw-medium">{new Date(evento.fecha).toLocaleDateString()}</p>
-                                                        <p className="fw-medium">Puntos {getEquipoNombre(evento.equipo1)}: {evento.puntos_equipo1}</p>
-                                                        <p className="fw-medium">Puntos {getEquipoNombre(evento.equipo2)}: {evento.puntos_equipo2}</p>
-                                                    </div>
-                                                    <div className="card-footer d-flex justify-content-between">
-                                                        <button
-                                                            className="btn btn-danger btn-sm"
-                                                            onClick={() => handleDelete(evento.id)}
+                                    return (
+                                        <div className="col-md-4 mb-4" key={i}>
+                                            <div className="card shadow-sm border-0 rounded-4 h-100">
+                                                <div className={`card-header text-center fw-bold ${headerClass}`}>
+                                                    {evento.resultado || "Resultado no disponible"}
+                                                </div>
+                                                <div className="card-body text-center">
+                                                    <h5 className="fw-bold mb-3">{evento.nombre}</h5>
+                                                    <h6 className="fw-semibold mb-3">
+                                                        <span
+                                                            className={`${evento.puntos_equipo1 > evento.puntos_equipo2
+                                                                    ? "text-success"
+                                                                    : evento.puntos_equipo1 < evento.puntos_equipo2
+                                                                        ? "text-danger"
+                                                                        : "text-secondary"
+                                                                }`}
                                                         >
-                                                            🗑️
+                                                            {getEquipoNombre(evento.equipo1)}
+                                                        </span>
+                                                        <span className="text-muted mx-2">vs</span>
+                                                        <span
+                                                            className={`${evento.puntos_equipo2 > evento.puntos_equipo1
+                                                                    ? "text-success"
+                                                                    : evento.puntos_equipo2 < evento.puntos_equipo1
+                                                                        ? "text-danger"
+                                                                        : "text-secondary"
+                                                                }`}
+                                                        >
+                                                            {getEquipoNombre(evento.equipo2)}
+                                                        </span>
+                                                    </h6>
+                                                    <p className="fw-medium text-muted">Deporte: {getDeporteNombre(evento.deporte)}</p>
+                                                    <p className="text-muted mb-0">📅 Fecha del partido:</p>
+                                                    <p className="fw-medium">{new Date(evento.fecha).toLocaleDateString()}</p>
+                                                    <p className="fw-medium">Puntos {getEquipoNombre(evento.equipo1)}: {evento.puntos_equipo1}</p>
+                                                    <p className="fw-medium">Puntos {getEquipoNombre(evento.equipo2)}: {evento.puntos_equipo2}</p>
+                                                </div>
+                                                <div className="card-footer d-flex justify-content-between">
+                                                    <button
+                                                        className="btn btn-danger btn-sm"
+                                                        onClick={() => handleDelete(evento.id)}
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                    {puedeEditar && (
+                                                        <button
+                                                            className="btn btn-dark btn-sm"
+                                                            onClick={() => handleEdit(evento)}
+                                                        >
+                                                            ✏️
                                                         </button>
-                                                        {puedeEditar && (
-                                                            <button
-                                                                className="btn btn-dark btn-sm"
-                                                                onClick={() => handleEdit(evento)}
-                                                            >
-                                                                ✏️
-                                                            </button>
-                                                        )}
-                                                    </div>
+                                                    )}
                                                 </div>
                                             </div>
-                                        );
-                                    })
-                                ) : (
-                                    <p className="text-center text-muted">No hay eventos finalizados</p>
-                                )}
-                            </div>
-                        </section>
-                    </>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <p className="text-center text-muted">No hay eventos finalizados</p>
+                            )}
+                        </div>
+                    </section>
+                </>
             )}
 
             {showModal && (
@@ -406,7 +407,18 @@ const Eventos = () => {
                                             className="form-control"
                                             name="nombre"
                                             value={currentData?.nombre || ""}
-                                            onChange={handleInputChange}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                if (/^[a-zA-Z0-9\s]*$/.test(value)) {
+                                                    handleInputChange(e); // Actualiza el estado si el valor es válido
+                                                } else {
+                                                    Swal.fire(
+                                                        "Nombre inválido",
+                                                        "El nombre del evento solo puede contener letras, números y espacios.",
+                                                        "error"
+                                                    );
+                                                }
+                                            }}
                                             required
                                         />
                                     </div>
