@@ -71,44 +71,102 @@ const Deportes = ({ onNavigate }) => {
   };
 
   const handleSave = async () => {
+    // Validar que el nombre del deporte no esté vacío
+    if (!currentData.deporte?.nombre) {
+        MySwal.fire(
+            "Campos incompletos",
+            "Por favor ingresa el nombre del deporte.",
+            "warning"
+        );
+        return;
+    }
+
+    // Validar que el nombre solo contenga letras, números y espacios
+    if (!/^[a-zA-Z0-9\s]+$/.test(currentData.deporte.nombre)) {
+        MySwal.fire(
+            "Nombre inválido",
+            "El nombre solo puede contener letras, números y espacios.",
+            "error"
+        );
+        return;
+    }
+
+    if (currentData.max_titulares < 0) {
+        MySwal.fire(
+            "Valor inválido",
+            "El número máximo de titulares no puede ser negativo.",
+            "error"
+        );
+        return;
+    }
+
+    if (currentData.max_suplentes < 0) {
+        MySwal.fire(
+            "Valor inválido",
+            "El número máximo de suplentes no puede ser negativo.",
+            "error"
+        );
+        return;
+    }
+
     const payload = {
-      ...currentData,
-      deporte: {
-        ...currentData.deporte,
-      },
+        ...currentData,
+        deporte: {
+            ...currentData.deporte,
+        },
     };
 
     const isEdit = !!currentData.deporte?.id;
 
     try {
-      const res = isEdit
-        ? await peticion(
-            apiClient,
-            `${prefijo}${currentData.deporte.id}/`,
-            "put",
-            payload
-          )
-        : await peticion(apiClient, prefijo, "post", payload);
+        const res = isEdit
+            ? await peticion(
+                  apiClient,
+                  `${prefijo}${currentData.deporte.id}/`,
+                  "put",
+                  payload
+              )
+            : await peticion(apiClient, prefijo, "post", payload);
 
-      setData((prevData) =>
-        isEdit
-          ? prevData.map((d) =>
-              d.deporte.id === res.data.deporte.id ? res.data : d
-            )
-          : [...prevData, res.data]
-      );
+        setData((prevData) =>
+            isEdit
+                ? prevData.map((d) =>
+                      d.deporte.id === res.data.deporte.id ? res.data : d
+                  )
+                : [...prevData, res.data]
+        );
 
-      MySwal.fire(
-        "Éxito",
-        isEdit ? "Deporte actualizado." : "Deporte creado.",
-        "success"
-      );
-      setShowModal(false);
+        MySwal.fire(
+            "Éxito",
+            isEdit ? "Deporte actualizado." : "Deporte creado.",
+            "success"
+        );
+        setShowModal(false);
     } catch (error) {
-      console.error("Error al guardar:", error);
-      MySwal.fire("Error", "Ocurrió un error al guardar.", "error");
+        console.error("Error al guardar:", error);
+
+        if (error.response && error.response.data) {
+            const errores = error.response.data;
+            let mensajeError = "";
+
+            for (const campo in errores) {
+                if (Array.isArray(errores[campo])) {
+                    mensajeError += `${campo}: ${errores[campo].join(", ")}\n`;
+                } else {
+                    mensajeError += `${campo}: ${errores[campo]}\n`;
+                }
+            }
+
+            MySwal.fire("Error", mensajeError || "Ocurrió un error al guardar.", "error");
+        } else {
+            MySwal.fire(
+                "Error",
+                "Ocurrió un error al guardar. Por favor, inténtalo de nuevo.",
+                "error"
+            );
+        }
     }
-  };
+};
 
   return (
     <div>
