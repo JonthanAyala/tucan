@@ -72,13 +72,15 @@ const Deportes = ({ onNavigate }) => {
 
   const handleSave = async () => {
     setCountErrors(0);
-    Object.keys(invalid).forEach((key) => {
-      if(invalid[key] === true) {
-        setCountErrors((prevCount) => prevCount + 1);
-      }
-    });
-    
-    if (countErrrors > 0) {
+
+    const errorCount = Object.keys(invalid).reduce(
+      (count, key) => (invalid[key] === true ? count + 1 : count),
+      0
+    );
+  
+    setCountErrors(errorCount); // Actualizar el estado (opcional, si necesitas mostrarlo en otro lugar)
+  
+    if (errorCount > 0) {
       MySwal.fire(
         "Error",
         "Por favor, corrige los errores antes de guardar.",
@@ -120,6 +122,8 @@ const Deportes = ({ onNavigate }) => {
         "success"
       );
       setShowModal(false);
+      setCountErrors(0);
+      setInvalid({});
     } catch (error) {
       console.error("Error al guardar:", error);
 
@@ -217,6 +221,10 @@ const Deportes = ({ onNavigate }) => {
                       className={`form-control ${
                         invalid.nombre ? "is-invalid" : ""
                       }`}
+                      placeholder="Nombre del Deporte"
+                      autoFocus
+                      required
+                      maxLength={45}
                       value={currentData.deporte?.nombre || ""}
                       onChange={(e) =>{
                         const value = e.target.value;
@@ -229,24 +237,18 @@ const Deportes = ({ onNavigate }) => {
                         });
                         setTimeout(() => {
                           if (
-                            /^[a-zA-Z0-9\s]+$/.test(
+                            /^[A-Za-z0-9_ ]+$/.test(
                               value
                             ) ||
                             value === ""
                           ) {
                             setInvalid({ ...invalid, nombre: false });
-                            setCurrentData({
-                              ...currentData,
-                              deporte: {
-                                ...currentData.deporte,
-                                nombre: e.target.value,
-                              },
-                            });
                           } else {
                             setInvalid({ ...invalid, nombre: true });
                           }
-                        }, 1000);
+                        }, 500);
                       }}
+                      
                     />
                     {invalid.nombre && (
                       <div className="text-danger">
@@ -260,6 +262,8 @@ const Deportes = ({ onNavigate }) => {
                     <label>Máx. Titulares <span className="text-danger">*</span></label>
                     <input
                       type="number"
+                      min="0"
+                      max="99"
                       className={`form-control ${invalid.max_titulares ? "is-invalid" : ""}`}
                       value={currentData.max_titulares || ""}
                       onChange={(e) => {
@@ -269,21 +273,13 @@ const Deportes = ({ onNavigate }) => {
                           max_titulares: e.target.value,
                         });
                         setTimeout(() => {
-                          if (
-                            /^[0-9]+$/.test(
-                              value
-                            ) && value < 0 ||
-                            value === ""
-                          ) {
+                          const numericValue = Number(value);
+                          if ((/^[0-9]+$/.test(value) && numericValue >= 0) || value === "") {
                             setInvalid({ ...invalid, max_titulares: false });
-                            setCurrentData({
-                              ...currentData,
-                              max_titulares: e.target.value,
-                            });
                           } else {
                             setInvalid({ ...invalid, max_titulares: true });
                           }
-                        }, 1000);
+                        }, 10);
                       }}
                     />
                     {invalid.max_titulares && (
@@ -307,17 +303,9 @@ const Deportes = ({ onNavigate }) => {
                           max_suplentes: e.target.value,
                         });
                         setTimeout(() => {
-                          if (
-                            /^[0-9]+$/.test(
-                              value
-                            ) && value < 0 ||
-                            value === ""
-                          ) {
+                          const numericValue = Number(value); // Convertir a número
+                          if ((/^[0-9]+$/.test(value) && numericValue >= 0) || value === "") {
                             setInvalid({ ...invalid, max_suplentes: false });
-                            setCurrentData({
-                              ...currentData,
-                              max_suplentes: e.target.value,
-                            });
                           } else {
                             setInvalid({ ...invalid, max_suplentes: true });
                           }
@@ -338,7 +326,12 @@ const Deportes = ({ onNavigate }) => {
                 </button>
                 <button
                   className="btn btn-secondary"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => {
+                    setShowModal(false);
+                    setCountErrors(0);
+                    setInvalid({});
+                  }
+                }
                 >
                   Cancelar
                 </button>
