@@ -15,7 +15,7 @@ const Equipos = ({ onNavigate }) => {
   const currentUserId = localStorage.getItem("id");
   const navi = useNavigate();
   const prefijo = "/equipos/api/";
- 
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -25,10 +25,10 @@ const Equipos = ({ onNavigate }) => {
         ]);
 
         setData(equiposRes.data);
-  
+
         setDeportes(deportesRes.data.map((deporte) => ({
           ...deporte,
-          max_titulares: deporte.max_titulares ,
+          max_titulares: deporte.max_titulares,
           max_suplentes: deporte.max_suplentes,
         })));
       } catch (error) {
@@ -96,47 +96,46 @@ const Equipos = ({ onNavigate }) => {
   };
 
   const handleSave = () => {
-    // Validar que todos los campos obligatorios estén completos
+
     if (!currentData.nombre || !currentData.deporte) {
-        Swal.fire(
-            "Campos incompletos",
-            "Por favor completa los campos obligatorios: Nombre y Deporte.",
-            "warning"
-        );
-        return;
+      Swal.fire(
+        "Campos incompletos",
+        "Por favor completa los campos obligatorios: Nombre y Deporte.",
+        "warning"
+      );
+      return;
     }
 
-    // Validar que el nombre solo contenga letras, números y espacios
+
     if (!/^[a-zA-Z0-9\s]+$/.test(currentData.nombre)) {
-        Swal.fire(
-            "Nombre inválido",
-            "El nombre solo puede contener letras, números y espacios.",
-            "error"
-        );
-        return;
+      Swal.fire(
+        "Nombre inválido",
+        "El nombre solo puede contener letras, números y espacios.",
+        "error"
+      );
+      return;
     }
 
-    // Validar que la descripción solo contenga letras, números, espacios, puntos y comas
+
     if (
-        currentData.descripcion &&
-        !/^[a-zA-Z0-9\s.,]+$/.test(currentData.descripcion)
+      currentData.descripcion &&
+      !/^[a-zA-Z0-9\s.,]+$/.test(currentData.descripcion)
     ) {
-        Swal.fire(
-            "Descripción inválida",
-            "La descripción solo puede contener letras, números, espacios, puntos y comas.",
-            "error"
-        );
-        return;
+      Swal.fire(
+        "Descripción inválida",
+        "La descripción solo puede contener letras, números, espacios, puntos y comas.",
+        "error"
+      );
+      return;
     }
 
-    // Validar que la ciudad solo contenga letras y espacios
     if (currentData.ciudad && !/^[a-zA-Z\s]+$/.test(currentData.ciudad)) {
-        Swal.fire(
-            "Ciudad inválida",
-            "La ciudad solo puede contener letras y espacios.",
-            "error"
-        );
-        return;
+      Swal.fire(
+        "Ciudad inválida",
+        "La ciudad solo puede contener letras y espacios.",
+        "error"
+      );
+      return;
     }
 
     const formData = new FormData();
@@ -149,86 +148,86 @@ const Equipos = ({ onNavigate }) => {
     formData.append("num_suplentes", currentData.num_suplentes || 0);
 
     if (logoFile) {
-        formData.append("logo", logoFile);
+      formData.append("logo", logoFile);
     }
 
     // Solo enviar el campo "activo" si estás editando un equipo
     if (currentData.id) {
-        formData.append("activo", currentData.activo);
+      formData.append("activo", currentData.activo);
     }
 
     const headers = { "Content-Type": "multipart/form-data" };
 
     if (currentData.id) {
-        peticion(apiClient, `${prefijo}${currentData.id}/`, "put", formData, headers)
-            .then((res) => {
-                setData(
-                    data.map((equipo) =>
-                        equipo.id === currentData.id ? res.data : equipo
-                    )
-                );
-                setShowModal(false);
-                Swal.fire("Actualizado", "Equipo actualizado con éxito.", "success");
-            })
-            .catch((error) => {
-                console.error("Error al actualizar el equipo:", error);
-                if (error.response && error.response.data) {
-                    const errores = error.response.data;
-                    let mensajeError = "";
+      peticion(apiClient, `${prefijo}${currentData.id}/`, "put", formData, headers)
+        .then((res) => {
+          setData(
+            data.map((equipo) =>
+              equipo.id === currentData.id ? res.data : equipo
+            )
+          );
+          setShowModal(false);
+          Swal.fire("Actualizado", "Equipo actualizado con éxito.", "success");
+        })
+        .catch((error) => {
+          console.error("Error al actualizar el equipo:", error);
+          if (error.response && error.response.data) {
+            const errores = error.response.data;
+            let mensajeError = "";
 
-                    for (const campo in errores) {
-                        if (Array.isArray(errores[campo])) {
-                            mensajeError += `${campo}: ${errores[campo].join(", ")}\n`;
-                        } else {
-                            mensajeError += `${campo}: ${errores[campo]}\n`;
-                        }
-                    }
+            for (const campo in errores) {
+              if (Array.isArray(errores[campo])) {
+                mensajeError += `${campo}: ${errores[campo].join(", ")}\n`;
+              } else {
+                mensajeError += `${campo}: ${errores[campo]}\n`;
+              }
+            }
 
-                    Swal.fire("Error", mensajeError || "No se pudo actualizar el equipo.", "error");
-                } else {
-                    Swal.fire(
-                        "Error",
-                        "Ocurrió un error al actualizar el equipo.",
-                        "error"
-                    );
-                }
-            });
+            Swal.fire("Error", mensajeError || "No se pudo actualizar el equipo.", "error");
+          } else {
+            Swal.fire(
+              "Error",
+              "Ocurrió un error al actualizar el equipo.",
+              "error"
+            );
+          }
+        });
     } else {
-        peticion(apiClient, prefijo, "post", formData, headers)
-            .then((res) => {
-                setData([...data, res.data]);
-                setShowModal(false);
-                Swal.fire("Creado", "Equipo creado con éxito.", "success");
-            })
-            .catch((error) => {
-                console.error("Error al crear el equipo:", error);
-                if (error.response && error.response.data) {
-                    const errores = error.response.data;
-                    let mensajeError = "";
+      peticion(apiClient, prefijo, "post", formData, headers)
+        .then((res) => {
+          setData([...data, res.data]);
+          setShowModal(false);
+          Swal.fire("Creado", "Equipo creado con éxito.", "success");
+        })
+        .catch((error) => {
+          console.error("Error al crear el equipo:", error);
+          if (error.response && error.response.data) {
+            const errores = error.response.data;
+            let mensajeError = "";
 
-                    for (const campo in errores) {
-                        if (Array.isArray(errores[campo])) {
-                            mensajeError += `${campo}: ${errores[campo].join(", ")}\n`;
-                        } else {
-                            mensajeError += `${campo}: ${errores[campo]}\n`;
-                        }
-                    }
+            for (const campo in errores) {
+              if (Array.isArray(errores[campo])) {
+                mensajeError += `${campo}: ${errores[campo].join(", ")}\n`;
+              } else {
+                mensajeError += `${campo}: ${errores[campo]}\n`;
+              }
+            }
 
-                    Swal.fire("Error", mensajeError || "No se pudo crear el equipo.", "error");
-                } else {
-                    Swal.fire(
-                        "Error",
-                        "Ocurrió un error al crear el equipo.",
-                        "error"
-                    );
-                }
-            });
+            Swal.fire("Error", mensajeError || "No se pudo crear el equipo.", "error");
+          } else {
+            Swal.fire(
+              "Error",
+              "Ocurrió un error al crear el equipo.",
+              "error"
+            );
+          }
+        });
     }
-};
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-  
+
     // Si el campo modificado es "deporte", actualizamos los titulares y suplentes automáticamente
     if (name === "deporte") {
       const selectedDeporte = deportes.find((deporte) => deporte.id === parseInt(value));
@@ -302,45 +301,45 @@ const Equipos = ({ onNavigate }) => {
       </div>
 
       <div className="row">
-  {filtrarEquipos().length > 0 ? (
-    filtrarEquipos().map((equipo) => (
-      <div className="col-md-4 mb-4" key={equipo.id}>
-        <div className="card h-100 shadow-sm">
-          {equipo.logo && (
-            <img
-              src={equipo.logo}
-              className="card-img-top"
-              alt={equipo.nombre}
-              style={{ height: "200px", objectFit: "cover" }}
-            />
-          )}
-          <div className="card-body">
-            <h5 className="card-title">{equipo.nombre}</h5>
-            <p className="text-muted">{equipo.ciudad}</p>
+        {filtrarEquipos().length > 0 ? (
+          filtrarEquipos().map((equipo) => (
+            <div className="col-md-4 mb-4" key={equipo.id}>
+              <div className="card h-100 shadow-sm">
+                {equipo.logo && (
+                  <img
+                    src={equipo.logo}
+                    className="card-img-top"
+                    alt={equipo.nombre}
+                    style={{ height: "200px", objectFit: "cover" }}
+                  />
+                )}
+                <div className="card-body">
+                  <h5 className="card-title">{equipo.nombre}</h5>
+                  <p className="text-muted">{equipo.ciudad}</p>
+                </div>
+                <div className="card-footer d-flex justify-content-between">
+                  <button
+                    className={`btn btn-sm ${equipo.activo ? "btn-primary" : "btn-secondary"}`}
+                    onClick={() => handleViewDetails(equipo)}
+                  >
+                    VER INFORMACIÓN
+                  </button>
+                  <button
+                    className={`btn btn-sm ${equipo.activo ? "btn-danger" : "btn-success"}`}
+                    onClick={() => handleToggleEstado(equipo)}
+                  >
+                    {equipo.activo ? "Desactivar" : "Activar"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-center mt-4">
+            <h5 className="text-muted">Aún no tienes un equipo</h5>
           </div>
-          <div className="card-footer d-flex justify-content-between">
-            <button
-              className={`btn btn-sm ${equipo.activo ? "btn-primary" : "btn-secondary"}`}
-              onClick={() => handleViewDetails(equipo)}
-            >
-              VER INFORMACIÓN
-            </button>
-            <button
-              className={`btn btn-sm ${equipo.activo ? "btn-danger" : "btn-success"}`}
-              onClick={() => handleToggleEstado(equipo)}
-            >
-              {equipo.activo ? "Desactivar" : "Activar"}
-            </button>
-          </div>
-        </div>
+        )}
       </div>
-    ))
-  ) : (
-    <div className="text-center mt-4">
-      <h5 className="text-muted">Aún no tienes un equipo</h5>
-    </div>
-  )}
-</div>
 
       {showModal && (
         <div className="modal d-block bg-dark bg-opacity-50" tabIndex="-1" role="dialog">
@@ -364,15 +363,28 @@ const Equipos = ({ onNavigate }) => {
               <div className="modal-body">
                 <form className="row g-3">
                   <div className="col-md-6">
-                    <label className="form-label">Nombre</label>
+                    <label className="form-label">Nombre <span className="text-danger">*</span></label>
                     <input
                       type="text"
                       className="form-control"
                       name="nombre"
                       value={currentData.nombre || ""}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (/^[a-zA-Z0-9\s]*$/.test(value)) {
+                          handleInputChange(e);
+                        } else {
+                          Swal.fire(
+                            "Nombre inválido",
+                            "El nombre solo puede contener letras, números y espacios.",
+                            "error"
+                          );
+                        }
+                      }}
+                      required
                     />
                   </div>
+
                   <div className="col-md-6">
                     <label className="form-label">Logo (imagen)</label>
                     <input
@@ -382,6 +394,7 @@ const Equipos = ({ onNavigate }) => {
                       onChange={handleFileChange}
                     />
                   </div>
+
                   {(logoPreview || currentData.logo) && (
                     <div className="text-center my-2">
                       <img
@@ -391,6 +404,7 @@ const Equipos = ({ onNavigate }) => {
                       />
                     </div>
                   )}
+
                   <div className="col-md-12">
                     <label className="form-label">Descripción</label>
                     <textarea
@@ -398,7 +412,18 @@ const Equipos = ({ onNavigate }) => {
                       name="descripcion"
                       rows="3"
                       value={currentData.descripcion || ""}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (/^[a-zA-Z0-9\s.,]*$/.test(value)) {
+                          handleInputChange(e);
+                        } else {
+                          Swal.fire(
+                            "Descripción inválida",
+                            "La descripción solo puede contener letras, números, espacios, puntos y comas.",
+                            "error"
+                          );
+                        }
+                      }}
                     ></textarea>
                   </div>
                   <div className="col-md-6">
@@ -408,16 +433,29 @@ const Equipos = ({ onNavigate }) => {
                       className="form-control"
                       name="ciudad"
                       value={currentData.ciudad || ""}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (/^[a-zA-Z\s]*$/.test(value)) {
+                          handleInputChange(e);
+                        } else {
+                          Swal.fire(
+                            "Ciudad inválida",
+                            "La ciudad solo puede contener letras y espacios.",
+                            "error"
+                          );
+                        }
+                      }}
                     />
                   </div>
+
                   <div className="col-md-6">
-                    <label className="form-label">Deporte</label>
+                    <label className="form-label">Deporte <span className="text-danger">*</span></label>
                     <select
                       className="form-select"
                       name="deporte"
                       value={currentData.deporte || ""}
                       onChange={handleInputChange}
+                      required
                     >
                       <option value="">Selecciona un deporte</option>
                       {deportes.map((deporte) => (
@@ -427,6 +465,7 @@ const Equipos = ({ onNavigate }) => {
                       ))}
                     </select>
                   </div>
+
                   <div className="col-md-6">
                     <label className="form-label">Número de Titulares</label>
                     <input
@@ -438,6 +477,8 @@ const Equipos = ({ onNavigate }) => {
                       disabled
                     />
                   </div>
+
+
                   <div className="col-md-6">
                     <label className="form-label">Número de Suplentes</label>
                     <input
