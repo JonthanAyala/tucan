@@ -13,6 +13,7 @@ const Usuarios = () => {
   const [showModal, setShowModal] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const currentUserId = localStorage.getItem("id");
+  const [invalid, setInvalid] = useState({});
   const navi = useNavigate();
 
   useEffect(() => {
@@ -71,10 +72,17 @@ const Usuarios = () => {
       : `/usuarios/api/`;
     const metodo = esEdicion ? "put" : "post";
 
-    if (!currentUser.nombre || !currentUser.email) {
+    const countErrrors = 0;
+    Object.keys(invalid).forEach((key) => {
+      if(key === true) {
+        countErrrors++;
+      }
+    });
+
+    if (countErrrors > 0) {
       MySwal.fire(
         "Error",
-        "Por favor completa los campos requeridos.",
+        "Por favor, corrige los errores antes de guardar.",
         "error"
       );
       return;
@@ -191,53 +199,153 @@ const Usuarios = () => {
                     <label>Nombre</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className={`form-control ${
+                        invalid?.nombre ? "is-invalid" : ""
+                      }`}
                       name="nombre"
                       value={currentUser.nombre || ""}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (
+                          /^[a-zA-ZÀ-ÿ\s]{0,100}$/.test(value) ||
+                          value === ""
+                        ) {
+                          setInvalid({ ...invalid, nombre: false }); // Marca como válido
+                          handleInputChange(e);
+                        } else {
+                          setInvalid({ ...invalid, nombre: true }); // Marca como inválido
+                        }
+                      }}
                     />
+                    {invalid?.nombre && (
+                      <div className="invalid-feedback">
+                        El nombre solo puede contener letras y espacios.
+                      </div>
+                    )}
                   </div>
                   <div className="form-group mb-3">
                     <label>Apellidos</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className={`form-control ${
+                        invalid?.apellidos ? "is-invalid" : ""
+                      }`}
                       name="apellidos"
                       value={currentUser.apellidos || ""}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (
+                          /^[a-zA-ZÀ-ÿ\s]{0,50}$/.test(value) ||
+                          value === ""
+                        ) {
+                          setInvalid({ ...invalid, apellidos: false });
+                          handleInputChange(e);
+                        } else {
+                          setInvalid({ ...invalid, apellidos: true });
+                          
+                        }
+                      }}
                     />
+                    {invalid?.apellidos && (
+                      <div className="invalid-feedback">
+                        Los apellidos solo pueden contener letras y espacios.
+                        </div>
+                    )} 
                   </div>
                   <div className="form-group mb-3">
                     <label>Username</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className={`form-control ${
+                        invalid?.username ? "is-invalid" : ""
+                      }`}
                       name="username"
                       value={currentUser.username || ""}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (
+                          /^[a-zA-Z0-9_]{0,45}$/.test(value) ||
+                          value === ""
+                        ) {
+                          setInvalid({ ...invalid, username: false });
+                          handleInputChange(e);
+                        } else {
+                          setInvalid({ ...invalid, username: true });
+                          handleInputChange(e);
+                        }
+                      }}
                     />
+                    {invalid?.username && (
+                      <div className="invalid-feedback">
+                        El username solo puede contener letras, números y guiones bajos.
+                        </div>
+                    )}
                   </div>
                   <div className="form-group mb-3">
                     <label>Email</label>
                     <input
                       type="email"
-                      className="form-control"
+                      className={`form-control ${
+                        invalid?.email ? "is-invalid" : ""
+                      }`}
                       name="email"
                       value={currentUser.email || ""}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        handleInputChange(e);
+                        setTimeout(() => {
+                          if (
+                            /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{0,100}$/.test(
+                              value
+                            ) ||
+                            value === ""
+                          ) {
+                            setInvalid({ ...invalid, email: false });
+                            handleInputChange(e);
+                          } else {
+                            setInvalid({ ...invalid, email: true });
+                          }
+                        }, 1000);
+                      }}
                     />
+                    {invalid?.email && (
+                      <div className="invalid-feedback">
+                        El email no es válido.
+                        </div>
+                        )}
                     <div className="form-group mb-3">
                       <label>Rol</label>
                       <select
-                        className="form-control"
+                        className={`form-control ${
+                          invalid?.rol ? "is-invalid" : ""
+                        }`}
                         name="rol"
                         value={currentUser.rol || ""}
-                        onChange={handleInputChange}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          handleInputChange(e);
+                          setTimeout(() => {
+                            if (
+                              value === "admin" ||
+                              value === "entrenador"
+                            ) {
+                              setInvalid({ ...invalid, rol: false });
+                              handleInputChange(e);
+                            } else {
+                              setInvalid({ ...invalid, rol: true });
+                            }
+                          }, 1000);
+                        }}
                       >
                         <option value="">Selecciona un rol</option>
                         <option value="admin">Administrador</option>
                         <option value="entrenador">Entrenador</option>
                       </select>
+                      {invalid?.rol && (
+                        <div className="invalid-feedback">
+                          Selecciona un rol válido.
+                        </div>
+                      )}
                     </div>
                   </div>
                   {!currentUser.id && (
@@ -246,21 +354,65 @@ const Usuarios = () => {
                         <label>Nueva Contraseña</label>
                         <input
                           type="password"
-                          className="form-control"
+                          className={`form-control ${
+                            invalid?.password ? "is-invalid" : ""
+                          }`}
                           name="password"
                           value={currentUser.password || ""}
-                          onChange={handleInputChange}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            handleInputChange(e);
+                            setTimeout(() => {
+                              if (
+                                /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(
+                                  value
+                                ) ||
+                                value === ""
+                              ) {
+                                setInvalid({ ...invalid, password: false });
+                                handleInputChange(e);
+                              } else {
+                                setInvalid({ ...invalid, password: true });
+                              }
+                            }, 1000);
+                          }}
                         />
+                        {invalid?.password && (
+                          <div className="invalid-feedback">
+                            La contraseña debe contener al menos 8 caracteres, una letra y un número.
+                          </div>
+                        )}
                       </div>
                       <div className="form-group mb-3">
                         <label>Confirmar Contraseña</label>
                         <input
                           type="password"
-                          className="form-control"
+                          className={`form-control ${
+                            invalid?.confirmPassword ? "is-invalid" : ""
+                          }`}
                           name="confirmPassword"
                           value={currentUser.confirmPassword || ""}
-                          onChange={handleInputChange}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            handleInputChange(e);
+                            setTimeout(() => {
+                              if (
+                                value === currentUser.password ||
+                                value === ""
+                              ) {
+                                setInvalid({ ...invalid, confirmPassword: false });
+                                handleInputChange(e);
+                              } else {
+                                setInvalid({ ...invalid, confirmPassword: true });
+                              }
+                            }, 1000);
+                          }}
                         />
+                        {invalid?.confirmPassword && (
+                          <div className="invalid-feedback">
+                            Las contraseñas no coinciden.
+                          </div>
+                        )}
                       </div>
                     </>
                   )}
