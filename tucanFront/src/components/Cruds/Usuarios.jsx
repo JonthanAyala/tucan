@@ -14,6 +14,7 @@ const Usuarios = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const currentUserId = localStorage.getItem("id");
   const [invalid, setInvalid] = useState({});
+  const [countErrrors, setCountErrors] = useState(0);
   const navi = useNavigate();
 
   useEffect(() => {
@@ -72,13 +73,12 @@ const Usuarios = () => {
       : `/usuarios/api/`;
     const metodo = esEdicion ? "put" : "post";
 
-    const countErrrors = 0;
+    setCountErrors(0); // Reinicia el contador de errores
     Object.keys(invalid).forEach((key) => {
-      if(key === true) {
-        countErrrors++;
+      if(invalid[key] === true) {
+        setCountErrors((prevCount) => prevCount + 1);
       }
     });
-
     if (countErrrors > 0) {
       MySwal.fire(
         "Error",
@@ -430,6 +430,8 @@ const Usuarios = () => {
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => {
+                    setCountErrors(0);
+                    setInvalid({});
                     setShowModal(false);
                     setCurrentUser(null);
                   }}
