@@ -23,8 +23,8 @@ function Prueba() {
   };
 
   const menuItems = [
-    { name: 'Equipos', component: 'Equipos', icon: null },
-    { name: 'EquipoDetalle', component: 'EquipoDetalle', icon: null },
+    { name: 'Equipos', component: 'Equipos', icon: 'bi bi-people-fill' },
+    { name: 'EquipoDetalle', component: 'EquipoDetalle', icon: 'bi bi-info-circle-fill' },
   ];
 
   return (

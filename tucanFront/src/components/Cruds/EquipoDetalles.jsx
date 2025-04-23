@@ -456,7 +456,7 @@ const EquipoDetalle = ({ id }) => {
   if (!equipo) {
     return (
       <div className="text-center py-4">
-        Por favor selecciona un Equipo en la pestaña Equipos
+        <h2>Por favor selecciona un Equipo en la pestaña Equipos</h2>
       </div>
     );
   }

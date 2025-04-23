@@ -56,7 +56,7 @@ const Login = ({ onLoginSuccess }) => {
             >
               <div className="text-center mb-4">
                 <img
-                  src="https://media.tenor.com/5J5q14EBJeIAAAAi/toucan.gif"
+                  src="/src/assets/toucan.gif"
                   alt="tucán"
                   style={{ width: "80px" }}
                 />
