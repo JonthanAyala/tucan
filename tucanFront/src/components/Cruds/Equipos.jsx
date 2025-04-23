@@ -252,7 +252,7 @@ const Equipos = ({ onNavigate }) => {
           </div>
           <div className="card-footer d-flex justify-content-between">
             <button
-              className="btn btn-primary btn-sm"
+              className={`btn btn-sm ${equipo.activo ? "btn-primary" : "btn-secondary"}`}
               onClick={() => handleViewDetails(equipo)}
             >
               VER INFORMACIÓN

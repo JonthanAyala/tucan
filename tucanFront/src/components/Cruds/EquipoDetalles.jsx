@@ -65,9 +65,14 @@ const EquipoDetalle = ({ id }) => {
         setJugadores(resJugadores.data.jugadores || []);
 
 
-        const resPosiciones = await peticion(apiClient, `/posicion/equipo/${id}/`);
-        
-        setPosiciones(resPosiciones.data || []);
+        if (equipoActualizado.deporte) {
+          const resPosiciones = await peticion(apiClient, `/posicion/equipo/${equipoActualizado.deporte}/`);
+          console.log("Posiciones cargadas:", resPosiciones.data);
+          setPosiciones(resPosiciones.data || []);
+        } else {
+          console.log("El equipo no tiene un deporte asociado.");
+          setPosiciones([]);
+        }
 
         const resEventos = await peticion(apiClient, `/eventos/equipo/${id}/`);
         const eventos = resEventos.data.eventos;
@@ -452,7 +457,7 @@ const EquipoDetalle = ({ id }) => {
                   </div>
                   <div className="card-footer bg-transparent border-0 text-center pt-2 pb-1">
                     <button
-                      className="btn btn-success btn-sm btn-lg"
+                      className={`btn btn-sm btn-lg ${equipo.activo ? "btn-success" : "btn-secondary"}`}
                       onClick={handleEditJugadores}
                     >
                       Editar Jugadores
@@ -593,7 +598,7 @@ const EquipoDetalle = ({ id }) => {
                     </ul>
                     <div className="text-center mt-3">
                       <button
-                        className="btn btn-success btn-sm btn-lg"
+                        className={`btn btn-sm btn-lg ${equipo.activo ? "btn-success" : "btn-secondary"}`}
                         onClick={handleEdit}
                       >
                         Editar Información

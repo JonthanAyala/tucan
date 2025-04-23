@@ -35,7 +35,7 @@ const Login = ({ onLoginSuccess }) => {
       className="vh-100 vw-100 d-flex align-items-center justify-content-center"
       style={{
         backgroundImage:
-          'url("https://imgs.search.brave.com/bwlognXrY9PqYLl6czJP2pDcnJTNoa-L-wjT2VMGeiw/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly93YWxs/cGFwZXJzLWNsYW4u/Y29tL3dwLWNvbnRl/bnQvdXBsb2Fkcy8y/MDI1LzAxL2Rla3Ut/YW5kLXVyYXJha2Et/dmFsZW50aW5lcy1y/b21hbnRpYy1oZWFy/dHMtZGVza3RvcC13/YWxscGFwZXItY292/ZXIuanBn")',
+          'url("https://s.france24.com/media/display/6aca8d1a-7783-11ea-9cf2-005056bf87d6/w:1280/p:16x9/WEB%2005ABR%20DEPORTES%20PORTADA%20FOTO.jpg")',
         backgroundSize: "cover",
         backgroundPosition: "center",
         backdropFilter: "blur(4px)",
