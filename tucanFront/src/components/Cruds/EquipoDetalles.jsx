@@ -20,7 +20,7 @@ const EquipoDetalle = ({ id }) => {
   const [empates, setEmpates] = useState(0);
   const [efectividad, setEfectividad] = useState(0);
   const [nuevoJugador, setNuevoJugador] = useState({
-    id : null,
+    id: null,
     nombre: "",
     fecha_nacimiento: "",
     posicion: "",
@@ -53,7 +53,7 @@ const EquipoDetalle = ({ id }) => {
 
         const resEntrenador = await peticion(apiClient, `/usuarios/api/${equipoActualizado.entrenador}/`);
         equipoActualizado.entrenador_nombre = resEntrenador.data.nombre;
-        
+
         setEquipo(equipoActualizado);
         setDeportes(deportes);
 
@@ -273,20 +273,97 @@ const EquipoDetalle = ({ id }) => {
       );
     }
   };
+
   const handleSaveJugador = async () => {
+    // Validar que todos los campos estén completos
     if (!nuevoJugador.nombre || !nuevoJugador.fecha_nacimiento || !nuevoJugador.posicion) {
       Swal.fire("Error", "Por favor completa todos los campos", "error");
       return;
     }
-  
+
+    // Validar que el nombre solo contenga letras y espacios
+    if (!/^[a-zA-Z\s]+$/.test(nuevoJugador.nombre)) {
+      Swal.fire(
+        "Nombre inválido",
+        "El nombre solo puede contener letras y espacios.",
+        "error"
+      );
+      return;
+    }
+
+    // Validar que la fecha de nacimiento no sea en el futuro
+    const fechaNacimiento = new Date(nuevoJugador.fecha_nacimiento);
+    if (fechaNacimiento > new Date()) {
+      Swal.fire(
+        "Fecha de nacimiento inválida",
+        "La fecha de nacimiento no puede ser en el futuro.",
+        "error"
+      );
+      return;
+    }
+
+    // Validar que el jugador tenga al menos 15 años
+    const edadMinima = 15;
+    const fechaLimite = new Date();
+    fechaLimite.setFullYear(fechaLimite.getFullYear() - edadMinima);
+    if (fechaNacimiento > fechaLimite) {
+      Swal.fire(
+        "Edad inválida",
+        `El jugador debe tener al menos ${edadMinima} años.`,
+        "error"
+      );
+      return;
+    }
+
+    // Validar que la posición corresponda al deporte del equipo
+    const posicionSeleccionada = posiciones.find(
+      (posicion) => posicion.id === Number(nuevoJugador.posicion)
+    );
+    if (posicionSeleccionada && posicionSeleccionada.deporte !== equipo.deporte) {
+      Swal.fire(
+        "Posición inválida",
+        "La posición no corresponde al deporte del equipo.",
+        "error"
+      );
+      return;
+    }
+
+    // Validar el límite de titulares y suplentes
+    const titularesActuales = jugadores.filter((jugador) => jugador.es_titular).length;
+    const suplentesActuales = jugadores.filter((jugador) => !jugador.es_titular).length;
+
+    if (
+      nuevoJugador.es_titular &&
+      titularesActuales >= equipo.num_titulares
+    ) {
+      Swal.fire(
+        "Límite de titulares alcanzado",
+        `El equipo ya tiene el máximo de ${equipo.num_titulares} jugadores titulares.`,
+        "error"
+      );
+      return;
+    }
+
+    if (
+      !nuevoJugador.es_titular &&
+      suplentesActuales >= equipo.num_suplentes
+    ) {
+      Swal.fire(
+        "Límite de suplentes alcanzado",
+        `El equipo ya tiene el máximo de ${equipo.num_suplentes} jugadores suplentes.`,
+        "error"
+      );
+      return;
+    }
+
     try {
-      const edad = new Date().getFullYear() - new Date(nuevoJugador.fecha_nacimiento).getFullYear();
+      const edad = new Date().getFullYear() - fechaNacimiento.getFullYear();
       const jugadorData = {
         ...nuevoJugador,
         edad,
         equipo: equipo.id,
       };
-  
+
       if (nuevoJugador.id) {
         // Actualizar jugador existente
         const res = await peticion(apiClient, `/jugadores/api/${nuevoJugador.id}/`, "put", jugadorData);
@@ -307,7 +384,7 @@ const EquipoDetalle = ({ id }) => {
         ]);
         Swal.fire("Éxito", "Jugador agregado correctamente", "success");
       }
-  
+
       // Reiniciar el formulario
       setNuevoJugador({ id: null, nombre: "", fecha_nacimiento: "", posicion: "", es_titular: false });
     } catch (error) {
@@ -316,6 +393,7 @@ const EquipoDetalle = ({ id }) => {
     }
     setEditarJugador(false);
   };
+
   /// Editar un jugador existente
   const handleEditJugador = (jugador) => {
     setNuevoJugador({
@@ -365,10 +443,10 @@ const EquipoDetalle = ({ id }) => {
         width: "100%",
         overflow: "auto"
       }}>
-           <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="text-center fs-3 fs-lg-2">{equipo.nombre}</h1>
-        <h5 className="text-muted">Entrenador: {equipo.entrenador_nombre}</h5>
-      </div>
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h1 className="text-center fs-3 fs-lg-2">{equipo.nombre}</h1>
+          <h5 className="text-muted">Entrenador: {equipo.entrenador_nombre}</h5>
+        </div>
         <div className="card-body p-0 p-lg-2">
           <div className="container-fluid px-0">
             <div className="row g-2 g-lg-4">
@@ -496,30 +574,24 @@ const EquipoDetalle = ({ id }) => {
                             onClick={() =>
                               Swal.fire({
                                 title: `${evento.nombre}`,
-                                html: `<strong>${
-                                  equipo.id === evento.equipo1
+                                html: `<strong>${equipo.id === evento.equipo1
                                     ? evento.equipo1_nombre
                                     : evento.equipo2_nombre
-                                } vs ${
-                                  equipo.id === evento.equipo1
+                                  } vs ${equipo.id === evento.equipo1
                                     ? evento.equipo2_nombre
                                     : evento.equipo1_nombre
-                                }</strong><br/>Deporte: ${
-                                  equipo.deporte_nombre
-                                }<br/>Fecha: ${new Date(
-                                  evento.fecha
-                                ).toLocaleDateString()}<br/>Resultado: ${
-                                  evento.resultado_equipo || "Pendiente"
-                                }<br/>${
-                                  evento.puntos_equipo1 != null &&
-                                  evento.puntos_equipo2 != null
-                                    ? `Puntos: ${
-                                        equipo.id === evento.equipo1
-                                          ? `${evento.puntos_equipo1} - ${evento.puntos_equipo2}`
-                                          : `${evento.puntos_equipo2} - ${evento.puntos_equipo1}`
-                                      }<br/>`
+                                  }</strong><br/>Deporte: ${equipo.deporte_nombre
+                                  }<br/>Fecha: ${new Date(
+                                    evento.fecha
+                                  ).toLocaleDateString()}<br/>Resultado: ${evento.resultado_equipo || "Pendiente"
+                                  }<br/>${evento.puntos_equipo1 != null &&
+                                    evento.puntos_equipo2 != null
+                                    ? `Puntos: ${equipo.id === evento.equipo1
+                                      ? `${evento.puntos_equipo1} - ${evento.puntos_equipo2}`
+                                      : `${evento.puntos_equipo2} - ${evento.puntos_equipo1}`
+                                    }<br/>`
                                     : ""
-                                }`,
+                                  }`,
                                 icon: "info",
                                 confirmButtonText: "Cerrar",
                               })
@@ -534,25 +606,24 @@ const EquipoDetalle = ({ id }) => {
                               <small className="text-muted d-block">
                                 {new Date(evento.fecha) > new Date()
                                   ? `Fecha: ${new Date(
-                                      evento.fecha
-                                    ).toLocaleDateString()}`
+                                    evento.fecha
+                                  ).toLocaleDateString()}`
                                   : evento.resultado_equipo || "pendnte"}
                               </small>
                             </div>
                             <span
-                              className={`badge rounded-pill ms-2 ${
-                                new Date(evento.fecha) > new Date()
+                              className={`badge rounded-pill ms-2 ${new Date(evento.fecha) > new Date()
                                   ? "bg-warning"
                                   : evento.resultado
-                                  ? "bg-secondary"
-                                  : "bg-primary"
-                              }`}
+                                    ? "bg-secondary"
+                                    : "bg-primary"
+                                }`}
                             >
                               {new Date(evento.fecha) > new Date()
                                 ? "Próximo"
                                 : equipo.id === evento.equipo1
-                                ? `${evento.puntos_equipo1} - ${evento.puntos_equipo2}`
-                                : `${evento.puntos_equipo2} - ${evento.puntos_equipo1}` ||
+                                  ? `${evento.puntos_equipo1} - ${evento.puntos_equipo2}`
+                                  : `${evento.puntos_equipo2} - ${evento.puntos_equipo1}` ||
                                   "Pendiente"}
                             </span>
                           </li>
