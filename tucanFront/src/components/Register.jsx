@@ -79,7 +79,7 @@ const Register = ({ onRegisterSuccess }) => {
             >
               <div className="text-center mb-4">
                 <img
-                  src="https://media.tenor.com/5J5q14EBJeIAAAAm/toucan.webp"
+                  src="src/assets/toucan.gif"
                   alt="tucán"
                   style={{ width: "70px", filter: "drop-shadow(0 0 5px #00ffe0)" }}
                 />

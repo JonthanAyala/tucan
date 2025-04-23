@@ -18,7 +18,10 @@ function Prueba() {
       case 'EquipoDetalle':
         return <EquipoDetalle id={activeComponent.params?.id} />;
       default:
-        return <div className="text-center"><h2>Selecciona una opción del menú</h2></div>;
+        return  <div className="text-center mt-4 text-muted">
+        <i className="bi bi-exclamation-circle fs-1 d-block mb-2"></i>
+        <h5>Selecciona una opción del Menú</h5>
+      </div>
     }
   };
 

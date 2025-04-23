@@ -456,9 +456,10 @@ const EquipoDetalle = ({ id }) => {
 
   if (!equipo) {
     return (
-      <div className="text-center py-4">
-        <h2>Por favor selecciona un Equipo en la pestaña Equipos</h2>
-      </div>
+      <div className="text-center mt-4 text-muted">
+      <i className="bi bi-exclamation-circle fs-1 d-block mb-2"></i>
+      <h5>Por favor selecciona un equipo para ver sus detalles</h5>
+    </div>
     );
   }
 

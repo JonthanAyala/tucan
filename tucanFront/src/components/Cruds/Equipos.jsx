@@ -282,20 +282,20 @@ const Equipos = ({ onNavigate }) => {
 
   return (
     <div>
-      <h3>Tabla de equipos</h3>
-      <button className="btn btn-success mb-3" onClick={handleCreate}>
-        <i className="bi bi-plus"></i> Crear equipo
+      <h2 className="fw-bold mb-4">Tabla de equipos</h2>
+      <button className="btn btn-success mb-4 rounded-pill px-4 py-2 shadow-sm d-flex align-items-center gap-2" onClick={handleCreate}>
+        <i className="bi bi-plus-lg"></i> Crear equipo
       </button>
 
-      <div className="mb-3">
+      <div className="mb-4 d-flex gap-2">
         <button
-          className={`btn ${mostrarActivos ? "btn-primary" : "btn-secondary"} me-2`}
+          className={`btn ${mostrarActivos ? "btn-outline-primary active" : "btn-outline-secondary"} rounded-pill px-4`}
           onClick={() => setMostrarActivos(true)}
         >
           Activos
         </button>
         <button
-          className={`btn ${!mostrarActivos ? "btn-primary" : "btn-secondary"}`}
+          className={`btn ${!mostrarActivos ? "btn-outline-primary active" : "btn-outline-secondary"} rounded-pill px-4`}
           onClick={() => setMostrarActivos(false)}
         >
           Inactivos
@@ -306,7 +306,7 @@ const Equipos = ({ onNavigate }) => {
         {filtrarEquipos().length > 0 ? (
           filtrarEquipos().map((equipo) => (
             <div className="col-md-4 mb-4" key={equipo.id}>
-              <div className="card h-100 shadow-sm">
+              <div className="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
                 {equipo.logo && (
                   <img
                     src={equipo.logo}
@@ -316,18 +316,18 @@ const Equipos = ({ onNavigate }) => {
                   />
                 )}
                 <div className="card-body">
-                  <h5 className="card-title">{equipo.nombre}</h5>
-                  <p className="text-muted">{equipo.ciudad}</p>
+                <h5 className="card-title fw-bold ">{equipo.nombre}</h5>
+                  <p className="text-muted mb-2"><i className="bi bi-geo-alt-fill me-1"></i>{equipo.ciudad}</p>
                 </div>
-                <div className="card-footer d-flex justify-content-between">
+                <div className="card-footer d-flex justify-content-between border-0 bg-light">
                   <button
-                    className={`btn btn-sm ${equipo.activo ? "btn-primary" : "btn-secondary"}`}
-                    onClick={() => handleViewDetails(equipo)}
+                    className={`btn btn-sm rounded-pill px-3 ${equipo.activo ? "btn-outline-primary" : "btn-outline-secondary"}`}
+                    onClick={() => handleViewDetails(equipo)} 
                   >
                     VER INFORMACIÓN
                   </button>
                   <button
-                    className={`btn btn-sm ${equipo.activo ? "btn-danger" : "btn-success"}`}
+                    className={`btn btn-sm rounded-pill px-3 ${equipo.activo ? "btn-outline-danger" : "btn-outline-success"}`}
                     onClick={() => handleToggleEstado(equipo)}
                   >
                     {equipo.activo ? "Desactivar" : "Activar"}
@@ -337,9 +337,10 @@ const Equipos = ({ onNavigate }) => {
             </div>
           ))
         ) : (
-          <div className="text-center mt-4">
-            <h5 className="text-muted">Aún no tienes un equipo</h5>
-          </div>
+          <div className="text-center mt-4 text-muted">
+  <i className="bi bi-exclamation-circle fs-1 d-block mb-2"></i>
+  <h5>Aún no tienes un equipo</h5>
+</div>
         )}
       </div>
       {showModal && (
