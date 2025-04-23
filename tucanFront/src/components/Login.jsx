@@ -55,11 +55,13 @@ const Login = ({ onLoginSuccess }) => {
               style={{ maxWidth: "400px" }}
             >
               <div className="text-center mb-4">
+                <Link to="/">
                 <img
                   src="/src/assets/toucan.gif"
                   alt="tucán"
                   style={{ width: "80px" }}
-                />
+                /></Link>
+                
               </div>
 
               <form onSubmit={handleLogin}>
