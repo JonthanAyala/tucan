@@ -11,13 +11,11 @@ const Equipos = ({ onNavigate }) => {
   const [logoPreview, setLogoPreview] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
   const [deportes, setDeportes] = useState([]);
+  const [mostrarActivos, setMostrarActivos] = useState(true);
   const currentUserId = localStorage.getItem("id");
   const navi = useNavigate();
   const prefijo = "/equipos/api/";
-  const handleViewDetails = (equipo) => {
-    onNavigate('EquipoDetalle', { id: equipo.id });
-  };
-
+ 
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -25,8 +23,14 @@ const Equipos = ({ onNavigate }) => {
           peticion(apiClient, prefijo),
           peticion(apiClient, "/deportes/api/")
         ]);
+
         setData(equiposRes.data);
-        setDeportes(deportesRes.data);
+        //setData(equiposRes.data);
+        setDeportes(deportesRes.data.map((deporte) => ({
+          ...deporte,
+          max_titulares: deporte.max_titulares ,
+          max_suplentes: deporte.max_suplentes,
+        })));
       } catch (error) {
         console.error("Error al cargar los datos:", error);
       } finally {
@@ -37,6 +41,18 @@ const Equipos = ({ onNavigate }) => {
     fetchData();
   }, []);
 
+  const handleViewDetails = (equipo) => {
+    onNavigate('EquipoDetalle', { id: equipo.id });
+  };
+
+
+
+  const filtrarEquipos = () => {
+    return data.filter(
+      (equipo) =>
+        equipo.entrenador === currentUserId && equipo.activo === mostrarActivos
+    );
+  };
   const handleEdit = (editar) => {
     setCurrentData(editar);
     setLogoPreview(editar.logo || null);
@@ -102,6 +118,11 @@ const Equipos = ({ onNavigate }) => {
       formData.append("logo", logoFile);
     }
 
+    // Solo enviar el campo "activo" si estás editando un equipo
+    if (currentData.id) {
+      formData.append("activo", currentData.activo);
+    }
+
     const headers = { "Content-Type": "multipart/form-data" };
 
     if (currentData.id) {
@@ -139,7 +160,23 @@ const Equipos = ({ onNavigate }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setCurrentData({ ...currentData, [name]: value });
+  
+    // Si el campo modificado es "deporte", actualizamos los titulares y suplentes automáticamente
+    if (name === "deporte") {
+      const selectedDeporte = deportes.find((deporte) => deporte.id === parseInt(value));
+      if (selectedDeporte) {
+        setCurrentData({
+          ...currentData,
+          [name]: value,
+          num_titulares: selectedDeporte.max_titulares || 0,
+          num_suplentes: selectedDeporte.max_suplentes || 0,
+        });
+      } else {
+        setCurrentData({ ...currentData, [name]: value });
+      }
+    } else {
+      setCurrentData({ ...currentData, [name]: value });
+    }
   };
 
   const handleFileChange = (e) => {
@@ -150,6 +187,30 @@ const Equipos = ({ onNavigate }) => {
     }
   };
 
+  const handleToggleEstado = (equipo) => {
+    peticion(apiClient, `${prefijo}${equipo.id}/cambiar_estado/`, "post")
+      .then(() => {
+        setData(
+          data.map((e) =>
+            e.id === equipo.id ? { ...e, activo: !e.activo } : e
+          )
+        );
+        Swal.fire(
+          "Estado cambiado",
+          `El equipo ahora está ${equipo.activo ? "inactivo" : "activo"}.`,
+          "success"
+        );
+      })
+      .catch((error) => {
+        console.error("Error al cambiar el estado:", error);
+        Swal.fire(
+          "Error",
+          "No se pudo cambiar el estado del equipo.",
+          "error"
+        );
+      });
+  };
+
   return (
     <div>
       <h3>Tabla de equipos</h3>
@@ -157,40 +218,61 @@ const Equipos = ({ onNavigate }) => {
         <i className="bi bi-plus"></i> Crear equipo
       </button>
 
-      <div className="row">
-        {data.map((equipo) => (
-          <div className="col-md-4 mb-4" key={equipo.id}>
-            <div className="card h-100 shadow-sm">
-              {equipo.logo && (
-                <img
-                  src={equipo.logo}
-                  className="card-img-top"
-                  alt={equipo.nombre}
-                  style={{ height: "200px", objectFit: "cover" }}
-                />
-              )}
-              <div className="card-body">
-                <h5 className="card-title">{equipo.nombre}</h5>
-                <p className="text-muted">{equipo.ciudad}</p>
-              </div>
-              <div className="card-footer d-flex justify-content-between">
-                <button
-                  className="btn btn-primary btn-sm"
-                  onClick={() => handleViewDetails(equipo)}
-                >
-                  VER INFORMACIÖN
-                </button>
-                <button
-                  className="btn btn-danger btn-sm"
-                  onClick={() => handleDelete(equipo.id)}
-                >
-                  ELIMINAR EQUIPO
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className="mb-3">
+        <button
+          className={`btn ${mostrarActivos ? "btn-primary" : "btn-secondary"} me-2`}
+          onClick={() => setMostrarActivos(true)}
+        >
+          Activos
+        </button>
+        <button
+          className={`btn ${!mostrarActivos ? "btn-primary" : "btn-secondary"}`}
+          onClick={() => setMostrarActivos(false)}
+        >
+          Inactivos
+        </button>
       </div>
+
+      <div className="row">
+  {filtrarEquipos().length > 0 ? (
+    filtrarEquipos().map((equipo) => (
+      <div className="col-md-4 mb-4" key={equipo.id}>
+        <div className="card h-100 shadow-sm">
+          {equipo.logo && (
+            <img
+              src={equipo.logo}
+              className="card-img-top"
+              alt={equipo.nombre}
+              style={{ height: "200px", objectFit: "cover" }}
+            />
+          )}
+          <div className="card-body">
+            <h5 className="card-title">{equipo.nombre}</h5>
+            <p className="text-muted">{equipo.ciudad}</p>
+          </div>
+          <div className="card-footer d-flex justify-content-between">
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => handleViewDetails(equipo)}
+            >
+              VER INFORMACIÓN
+            </button>
+            <button
+              className={`btn btn-sm ${equipo.activo ? "btn-danger" : "btn-success"}`}
+              onClick={() => handleToggleEstado(equipo)}
+            >
+              {equipo.activo ? "Desactivar" : "Activar"}
+            </button>
+          </div>
+        </div>
+      </div>
+    ))
+  ) : (
+    <div className="text-center mt-4">
+      <h5 className="text-muted">Aún no tienes un equipo</h5>
+    </div>
+  )}
+</div>
 
       {showModal && (
         <div className="modal d-block bg-dark bg-opacity-50" tabIndex="-1" role="dialog">
@@ -285,6 +367,7 @@ const Equipos = ({ onNavigate }) => {
                       name="num_titulares"
                       value={currentData.num_titulares || ""}
                       onChange={handleInputChange}
+                      disabled
                     />
                   </div>
                   <div className="col-md-6">
@@ -295,6 +378,7 @@ const Equipos = ({ onNavigate }) => {
                       name="num_suplentes"
                       value={currentData.num_suplentes || ""}
                       onChange={handleInputChange}
+                      disabled
                     />
                   </div>
                 </form>

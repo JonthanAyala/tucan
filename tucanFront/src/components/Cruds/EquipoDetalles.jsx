@@ -37,7 +37,11 @@ const EquipoDetalle = ({ id }) => {
 
         const resDeportes = await peticion(apiClient, `/deportes/api/`);
 
-        const deportes = resDeportes.data;
+        const deportes = resDeportes.data.map((deporte) => ({
+          ...deporte,
+          max_titulares: deporte.max_titulares || 0,
+          max_suplentes: deporte.max_suplentes || 0,
+        }));
 
         const equipoActualizado = { ...resEquipo.data };
         const deporte = deportes.find(
@@ -156,10 +160,26 @@ const EquipoDetalle = ({ id }) => {
   };
 
   const handleEdit = () => {
+    if (!equipo.activo) {
+      Swal.fire(
+        "Acción no permitida",
+        "No se puede editar la información de un equipo inactivo.",
+        "warning"
+      );
+      return;
+    }
     setEditableEquipo(equipo);
     setShowModal(true);
   };
   const handleEditJugadores = () => {
+    if (!equipo.activo) {
+      Swal.fire(
+        "Acción no permitida",
+        "No se pueden editar los jugadores de un equipo inactivo.",
+        "warning"
+      );
+      return;
+    }
     setShowJugadoresModal(true);
   };
 
@@ -173,7 +193,23 @@ const EquipoDetalle = ({ id }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setEditableEquipo({ ...editableEquipo, [name]: value });
+
+    // Si el campo modificado es "deporte", actualizamos los titulares y suplentes automáticamente
+    if (name === "deporte") {
+      const selectedDeporte = deportes.find((deporte) => deporte.id === parseInt(value));
+      if (selectedDeporte) {
+        setEditableEquipo({
+          ...editableEquipo,
+          [name]: value,
+          num_titulares: selectedDeporte.max_titulares || 0,
+          num_suplentes: selectedDeporte.max_suplentes || 0,
+        });
+      } else {
+        setEditableEquipo({ ...editableEquipo, [name]: value });
+      }
+    } else {
+      setEditableEquipo({ ...editableEquipo, [name]: value });
+    }
   };
   const handleSave = async () => {
     if (!editableEquipo.nombre || !editableEquipo.deporte) {
@@ -305,6 +341,17 @@ const EquipoDetalle = ({ id }) => {
     );
   }
 
+  const eventosFiltrados = eventos.map((evento) => {
+    if (evento.puntos_equipo1 === null || evento.puntos_equipo2 === null) {
+      return {
+        ...evento,
+        puntos_equipo1: "0",
+        puntos_equipo2: "0",
+      };
+    }
+    return evento;
+  });
+
   return (
     <div className="d-flex justify-content-center align-items-center min-vh-100 p-2 p-lg-3" >
       <div className="card p-2 p-lg-4 shadow-lg" style={{
@@ -430,13 +477,13 @@ const EquipoDetalle = ({ id }) => {
                       flex: "1 1 auto",
                     }}
                   >
-                    {eventos.length === 0 ? (
+                    {eventosFiltrados.length === 0 ? (
                       <p className="text-muted text-center my-2 my-lg-3">
                         No hay eventos registrados
                       </p>
                     ) : (
                       <ul className="list-group list-group-flush">
-                        {eventos.map((evento) => (
+                        {eventosFiltrados.map((evento) => (
                           <li
                             key={evento.id}
                             className="list-group-item d-flex justify-content-between align-items-center py-2"
@@ -663,6 +710,7 @@ const EquipoDetalle = ({ id }) => {
                             name="num_titulares"
                             value={editableEquipo.num_titulares || ""}
                             onChange={handleInputChange}
+                            disabled
                           />
                         </div>
                         <div className="col-md-6">
@@ -675,6 +723,7 @@ const EquipoDetalle = ({ id }) => {
                             name="num_suplentes"
                             value={editableEquipo.num_suplentes || ""}
                             onChange={handleInputChange}
+                            disabled
                           />
                         </div>
                       </form>

@@ -223,7 +223,9 @@ const Eventos = () => {
         console.log("Deporte seleccionado:", e.target.value); 
     };
 
-    const equiposFiltrados = equipos.filter((equipo) => parseInt(equipo.deporte, 10) === parseInt(deporteSeleccionado, 10));
+    const equiposFiltrados = equipos.filter(
+        (equipo) => equipo.activo && parseInt(equipo.deporte, 10) === parseInt(deporteSeleccionado, 10)
+    );
 
     const eventosProximos = data.filter(
         (evento) => evento.puntos_equipo1 === null && evento.puntos_equipo2 === null
