@@ -88,63 +88,63 @@ const Deportes = ({ onNavigate }) => {
     }
 
     const payload = {
-        ...currentData,
-        deporte: {
-            ...currentData.deporte,
-        },
+      ...currentData,
+      deporte: {
+        ...currentData.deporte,
+      },
     };
 
     const isEdit = !!currentData.deporte?.id;
 
     try {
-        const res = isEdit
-            ? await peticion(
-                  apiClient,
-                  `${prefijo}${currentData.deporte.id}/`,
-                  "put",
-                  payload
-              )
-            : await peticion(apiClient, prefijo, "post", payload);
+      const res = isEdit
+        ? await peticion(
+          apiClient,
+          `${prefijo}${currentData.deporte.id}/`,
+          "put",
+          payload
+        )
+        : await peticion(apiClient, prefijo, "post", payload);
 
-        setData((prevData) =>
-            isEdit
-                ? prevData.map((d) =>
-                      d.deporte.id === res.data.deporte.id ? res.data : d
-                  )
-                : [...prevData, res.data]
-        );
+      setData((prevData) =>
+        isEdit
+          ? prevData.map((d) =>
+            d.deporte.id === res.data.deporte.id ? res.data : d
+          )
+          : [...prevData, res.data]
+      );
 
-        MySwal.fire(
-            "Éxito",
-            isEdit ? "Deporte actualizado." : "Deporte creado.",
-            "success"
-        );
-        setShowModal(false);
+      MySwal.fire(
+        "Éxito",
+        isEdit ? "Deporte actualizado." : "Deporte creado.",
+        "success"
+      );
+      setShowModal(false);
     } catch (error) {
-        console.error("Error al guardar:", error);
+      console.error("Error al guardar:", error);
 
-        if (error.response && error.response.data) {
-            const errores = error.response.data;
-            let mensajeError = "";
+      if (error.response && error.response.data) {
+        const errores = error.response.data;
+        let mensajeError = "";
 
-            for (const campo in errores) {
-                if (Array.isArray(errores[campo])) {
-                    mensajeError += `${campo}: ${errores[campo].join(", ")}\n`;
-                } else {
-                    mensajeError += `${campo}: ${errores[campo]}\n`;
-                }
-            }
-
-            MySwal.fire("Error", mensajeError || "Ocurrió un error al guardar.", "error");
-        } else {
-            MySwal.fire(
-                "Error",
-                "Ocurrió un error al guardar. Por favor, inténtalo de nuevo.",
-                "error"
-            );
+        for (const campo in errores) {
+          if (Array.isArray(errores[campo])) {
+            mensajeError += `${campo}: ${errores[campo].join(", ")}\n`;
+          } else {
+            mensajeError += `${campo}: ${errores[campo]}\n`;
+          }
         }
+
+        MySwal.fire("Error", mensajeError || "Ocurrió un error al guardar.", "error");
+      } else {
+        MySwal.fire(
+          "Error",
+          "Ocurrió un error al guardar. Por favor, inténtalo de nuevo.",
+          "error"
+        );
+      }
     }
-};
+  };
 
   return (
     <div>
@@ -209,8 +209,9 @@ const Deportes = ({ onNavigate }) => {
               </div>
               <div className="modal-body">
                 <form>
+                  {/* Validación del nombre del deporte */}
                   <div className="form-group">
-                    <label>Nombre del Deporte</label>
+                    <label>Nombre del Deporte <span className="text-danger">*</span></label>
                     <input
                       type="text"
                       className={`form-control ${
@@ -253,8 +254,10 @@ const Deportes = ({ onNavigate }) => {
                       </div>
                     )}
                   </div>
+
+                  {/* Validación del número máximo de titulares */}
                   <div className="form-group">
-                    <label>Máx. Titulares</label>
+                    <label>Máx. Titulares <span className="text-danger">*</span></label>
                     <input
                       type="number"
                       className={`form-control ${invalid.max_titulares ? "is-invalid" : ""}`}
@@ -289,8 +292,10 @@ const Deportes = ({ onNavigate }) => {
                       </div>
                     )}
                   </div>
+
+                  {/* Validación del número máximo de suplentes */}
                   <div className="form-group">
-                    <label>Máx. Suplentes</label>
+                    <label>Máx. Suplentes <span className="text-danger">*</span></label>
                     <input
                       type="number"
                       className={`form-control ${invalid.max_suplentes ? "is-invalid" : ""}`}

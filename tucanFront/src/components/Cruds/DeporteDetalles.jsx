@@ -21,7 +21,7 @@ const DeporteDetalles = ({ id }) => {
 
         setDeporte(resDeporte.data);
 
-        const resPosiciones = await peticion(apiClient, `/posicion/api/`); 
+        const resPosiciones = await peticion(apiClient, `/posicion/api/`);
         const posicionesFiltradas = resPosiciones.data.filter(
           (posicion) => posicion.deporte === id
         );
@@ -77,79 +77,79 @@ const DeporteDetalles = ({ id }) => {
   const handleSaveDeporte = async () => {
     // Validar que el nombre del deporte no esté vacío
     if (!editableDeporte.deporte?.nombre) {
-        Swal.fire(
-            "Campos incompletos",
-            "Por favor ingresa el nombre del deporte.",
-            "warning"
-        );
-        return;
+      Swal.fire(
+        "Campos incompletos",
+        "Por favor ingresa el nombre del deporte.",
+        "warning"
+      );
+      return;
     }
 
     // Validar que el nombre solo contenga letras, números y espacios
     if (!/^[a-zA-Z0-9\s]+$/.test(editableDeporte.deporte.nombre)) {
-        Swal.fire(
-            "Nombre inválido",
-            "El nombre solo puede contener letras, números y espacios.",
-            "error"
-        );
-        return;
+      Swal.fire(
+        "Nombre inválido",
+        "El nombre solo puede contener letras, números y espacios.",
+        "error"
+      );
+      return;
     }
 
     // Validar que el número máximo de titulares no sea negativo
     if (editableDeporte.max_titulares < 0) {
-        Swal.fire(
-            "Valor inválido",
-            "El número máximo de titulares no puede ser negativo.",
-            "error"
-        );
-        return;
+      Swal.fire(
+        "Valor inválido",
+        "El número máximo de titulares no puede ser negativo.",
+        "error"
+      );
+      return;
     }
 
     // Validar que el número máximo de suplentes no sea negativo
     if (editableDeporte.max_suplentes < 0) {
-        Swal.fire(
-            "Valor inválido",
-            "El número máximo de suplentes no puede ser negativo.",
-            "error"
-        );
-        return;
+      Swal.fire(
+        "Valor inválido",
+        "El número máximo de suplentes no puede ser negativo.",
+        "error"
+      );
+      return;
     }
 
     try {
-        const res = await peticion(
-            apiClient,
-            `/config_deporte/api/${id}/`,
-            "put",
-            editableDeporte
-        );
-        setDeporte(res.data);
-        setShowModal(false);
-        Swal.fire("Actualizado", "Deporte actualizado con éxito.", "success");
+      const res = await peticion(
+        apiClient,
+        `/config_deporte/api/${id}/`,
+        "put",
+        editableDeporte
+      );
+      setDeporte(res.data);
+      setShowModal(false);
+      Swal.fire("Actualizado", "Deporte actualizado con éxito.", "success");
     } catch (error) {
-        console.error("Error al actualizar el deporte:", error);
+      console.error("Error al actualizar el deporte:", error);
 
-        if (error.response && error.response.data) {
-            const errores = error.response.data;
-            let mensajeError = "";
+      if (error.response && error.response.data) {
+        const errores = error.response.data;
+        let mensajeError = "";
 
-            for (const campo in errores) {
-                if (Array.isArray(errores[campo])) {
-                    mensajeError += `${campo}: ${errores[campo].join(", ")}\n`;
-                } else {
-                    mensajeError += `${campo}: ${errores[campo]}\n`;
-                }
-            }
-
-            Swal.fire("Error", mensajeError || "Ocurrió un error al guardar.", "error");
-        } else {
-            Swal.fire(
-                "Error",
-                "Ocurrió un error al guardar. Por favor, inténtalo de nuevo.",
-                "error"
-            );
+        for (const campo in errores) {
+          if (Array.isArray(errores[campo])) {
+            mensajeError += `${campo}: ${errores[campo].join(", ")}\n`;
+          } else {
+            mensajeError += `${campo}: ${errores[campo]}\n`;
+          }
         }
+
+        Swal.fire("Error", mensajeError || "Ocurrió un error al guardar.", "error");
+      } else {
+        Swal.fire(
+          "Error",
+          "Ocurrió un error al guardar. Por favor, inténtalo de nuevo.",
+          "error"
+        );
+      }
     }
-};
+  };
 
   const handleEditPosicion = (posicion) => {
     setEditablePosicion(posicion);
@@ -159,76 +159,76 @@ const DeporteDetalles = ({ id }) => {
   const handleSavePosicion = async () => {
     // Validar que el nombre de la posición no esté vacío
     if (!editablePosicion?.nombre) {
-        Swal.fire(
-            "Campos incompletos",
-            "Por favor ingresa el nombre de la posición.",
-            "warning"
-        );
-        return;
+      Swal.fire(
+        "Campos incompletos",
+        "Por favor ingresa el nombre de la posición.",
+        "warning"
+      );
+      return;
     }
 
     // Validar que el nombre solo contenga letras y espacios
     if (!/^[a-zA-Z\s]+$/.test(editablePosicion.nombre)) {
-        Swal.fire(
-            "Nombre inválido",
-            "El nombre solo puede contener letras y espacios.",
-            "error"
-        );
-        return;
+      Swal.fire(
+        "Nombre inválido",
+        "El nombre solo puede contener letras y espacios.",
+        "error"
+      );
+      return;
     }
 
     try {
-        if (editablePosicion.id === undefined) {
-            editablePosicion.deporte = deporte.deporte.id;
-            const res = await peticion(
-                apiClient,
-                `/posicion/api/`,
-                "post",
-                editablePosicion
-            );
-            setPosiciones([...posiciones, res.data]);
-            setShowPosicionesModal(false);
-            Swal.fire("Creado", "Posición creada con éxito.", "success");
-        } else {
-            const res = await peticion(
-                apiClient,
-                `/posicion/api/${editablePosicion.id}/`,
-                "put",
-                editablePosicion
-            );
-            setPosiciones(
-                posiciones.map((pos) =>
-                    pos.id === editablePosicion.id ? res.data : pos
-                )
-            );
-            setShowPosicionesModal(false);
-            Swal.fire("Actualizado", "Posición actualizada con éxito.", "success");
-        }
+      if (editablePosicion.id === undefined) {
+        editablePosicion.deporte = deporte.deporte.id;
+        const res = await peticion(
+          apiClient,
+          `/posicion/api/`,
+          "post",
+          editablePosicion
+        );
+        setPosiciones([...posiciones, res.data]);
+        setShowPosicionesModal(false);
+        Swal.fire("Creado", "Posición creada con éxito.", "success");
+      } else {
+        const res = await peticion(
+          apiClient,
+          `/posicion/api/${editablePosicion.id}/`,
+          "put",
+          editablePosicion
+        );
+        setPosiciones(
+          posiciones.map((pos) =>
+            pos.id === editablePosicion.id ? res.data : pos
+          )
+        );
+        setShowPosicionesModal(false);
+        Swal.fire("Actualizado", "Posición actualizada con éxito.", "success");
+      }
     } catch (error) {
-        console.error("Error al guardar la posición:", error);
+      console.error("Error al guardar la posición:", error);
 
-        if (error.response && error.response.data) {
-            const errores = error.response.data;
-            let mensajeError = "";
+      if (error.response && error.response.data) {
+        const errores = error.response.data;
+        let mensajeError = "";
 
-            for (const campo in errores) {
-                if (Array.isArray(errores[campo])) {
-                    mensajeError += `${campo}: ${errores[campo].join(", ")}\n`;
-                } else {
-                    mensajeError += `${campo}: ${errores[campo]}\n`;
-                }
-            }
-
-            Swal.fire("Error", mensajeError || "Ocurrió un error al guardar.", "error");
-        } else {
-            Swal.fire(
-                "Error",
-                "Ocurrió un error al guardar. Por favor, inténtalo de nuevo.",
-                "error"
-            );
+        for (const campo in errores) {
+          if (Array.isArray(errores[campo])) {
+            mensajeError += `${campo}: ${errores[campo].join(", ")}\n`;
+          } else {
+            mensajeError += `${campo}: ${errores[campo]}\n`;
+          }
         }
+
+        Swal.fire("Error", mensajeError || "Ocurrió un error al guardar.", "error");
+      } else {
+        Swal.fire(
+          "Error",
+          "Ocurrió un error al guardar. Por favor, inténtalo de nuevo.",
+          "error"
+        );
+      }
     }
-};
+  };
 
   const handleDeletePosicion = async (id) => {
     Swal.fire({
@@ -385,61 +385,78 @@ const DeporteDetalles = ({ id }) => {
               <div className="modal-body">
                 <form>
                   <div className="form-group mb-3">
-                    <label>Nombre del Deporte</label>
+                    <label>Nombre del Deporte <span className="text-danger">*</span></label>
                     <input
                       type="text"
                       className="form-control"
                       value={editableDeporte.deporte?.nombre || ""}
-                      onChange={(e) =>
-                        setEditableDeporte({
-                          ...editableDeporte,
-                          deporte: {
-                            ...editableDeporte.deporte,
-                            nombre: e.target.value,
-                          },
-                        })
-                      }
-                    />
-                    <input type="number"
-                      value={editableDeporte.deporte?.id || ""}
-                      hidden
-                      onChange={(e) =>
-                        setEditableDeporte({
-                          ...editableDeporte,
-                          deporte: {
-                            ...editableDeporte.deporte,
-                            id: e.target.value,
-                          },
-                        })
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (/^[a-zA-Z\s]*$/.test(value)) {
+                          setEditableDeporte({
+                            ...editableDeporte,
+                            deporte: {
+                              ...editableDeporte.deporte,
+                              nombre: value,
+                            },
+                          });
+                        } else {
+                          Swal.fire(
+                            "Nombre inválido",
+                            "El nombre solo puede contener letras y espacios.",
+                            "error"
+                          );
+                        }
+                      }}
+                      required
                     />
                   </div>
                   <div className="form-group mb-3">
-                    <label>Máx. Titulares</label>
+                    <label>Máx. Titulares <span className="text-danger">*</span></label>
                     <input
                       type="number"
                       className="form-control"
                       value={editableDeporte.max_titulares || ""}
-                      onChange={(e) =>
-                        setEditableDeporte({
-                          ...editableDeporte,
-                          max_titulares: e.target.value,
-                        })
-                      }
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value, 10);
+                        if (value >= 0) {
+                          setEditableDeporte({
+                            ...editableDeporte,
+                            max_titulares: value,
+                          });
+                        } else {
+                          Swal.fire(
+                            "Valor inválido",
+                            "El número máximo de titulares no puede ser negativo.",
+                            "error"
+                          );
+                        }
+                      }}
+                      required
                     />
                   </div>
                   <div className="form-group mb-3">
-                    <label>Máx. Suplentes</label>
+                    <label>Máx. Suplentes <span className="text-danger">*</span></label>
                     <input
                       type="number"
                       className="form-control"
                       value={editableDeporte.max_suplentes || ""}
-                      onChange={(e) =>
-                        setEditableDeporte({
-                          ...editableDeporte,
-                          max_suplentes: e.target.value,
-                        })
-                      }
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value, 10);
+                        if (value >= 0) {
+                          setEditableDeporte({
+                            ...editableDeporte,
+                            max_suplentes: value,
+                          });
+                        } else {
+                          Swal.fire(
+                            "Valor inválido",
+                            "El número máximo de suplentes no puede ser negativo.",
+                            "error"
+                          );
+                        }
+                      }}
+                      required
                     />
                   </div>
                 </form>
@@ -490,17 +507,27 @@ const DeporteDetalles = ({ id }) => {
                         })
                       }
                     />
-                    <label>Nombre</label>
+                    <label>Nombre de la Posición <span className="text-danger">*</span></label>
                     <input
                       type="text"
                       className="form-control"
                       value={editablePosicion?.nombre || ""}
-                      onChange={(e) =>
-                        setEditablePosicion({
-                          ...editablePosicion,
-                          nombre: e.target.value,
-                        })
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (/^[a-zA-Z\s]*$/.test(value)) {
+                          setEditablePosicion({
+                            ...editablePosicion,
+                            nombre: value,
+                          });
+                        } else {
+                          Swal.fire(
+                            "Nombre inválido",
+                            "El nombre solo puede contener letras y espacios.",
+                            "error"
+                          );
+                        }
+                      }}
+                      required
                     />
                   </div>
                 </form>
