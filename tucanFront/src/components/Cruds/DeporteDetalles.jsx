@@ -21,7 +21,7 @@ const DeporteDetalles = ({ id }) => {
 
         setDeporte(resDeporte.data);
 
-        const resPosiciones = await peticion(apiClient, `/posicion/api/`); // enpoint para obtener todas las posiciones por deporte PENDIE
+        const resPosiciones = await peticion(apiClient, `/posicion/api/`); 
         const posicionesFiltradas = resPosiciones.data.filter(
           (posicion) => posicion.deporte === id
         );
@@ -75,21 +75,81 @@ const DeporteDetalles = ({ id }) => {
   };
 
   const handleSaveDeporte = async () => {
-    try {
-      const res = await peticion(
-        apiClient,
-        `/config_deporte/api/${id}/`,
-        "put",
-        editableDeporte
-      );
-      setDeporte(res.data);
-      setShowModal(false);
-      Swal.fire("Actualizado", "Deporte actualizado con éxito.", "success");
-    } catch (error) {
-      console.error("Error al actualizar el deporte:", error);
-      Swal.fire("Error", "Ocurrió un error al actualizar el deporte.", "error");
+    // Validar que el nombre del deporte no esté vacío
+    if (!editableDeporte.deporte?.nombre) {
+        Swal.fire(
+            "Campos incompletos",
+            "Por favor ingresa el nombre del deporte.",
+            "warning"
+        );
+        return;
     }
-  };
+
+    // Validar que el nombre solo contenga letras, números y espacios
+    if (!/^[a-zA-Z0-9\s]+$/.test(editableDeporte.deporte.nombre)) {
+        Swal.fire(
+            "Nombre inválido",
+            "El nombre solo puede contener letras, números y espacios.",
+            "error"
+        );
+        return;
+    }
+
+    // Validar que el número máximo de titulares no sea negativo
+    if (editableDeporte.max_titulares < 0) {
+        Swal.fire(
+            "Valor inválido",
+            "El número máximo de titulares no puede ser negativo.",
+            "error"
+        );
+        return;
+    }
+
+    // Validar que el número máximo de suplentes no sea negativo
+    if (editableDeporte.max_suplentes < 0) {
+        Swal.fire(
+            "Valor inválido",
+            "El número máximo de suplentes no puede ser negativo.",
+            "error"
+        );
+        return;
+    }
+
+    try {
+        const res = await peticion(
+            apiClient,
+            `/config_deporte/api/${id}/`,
+            "put",
+            editableDeporte
+        );
+        setDeporte(res.data);
+        setShowModal(false);
+        Swal.fire("Actualizado", "Deporte actualizado con éxito.", "success");
+    } catch (error) {
+        console.error("Error al actualizar el deporte:", error);
+
+        if (error.response && error.response.data) {
+            const errores = error.response.data;
+            let mensajeError = "";
+
+            for (const campo in errores) {
+                if (Array.isArray(errores[campo])) {
+                    mensajeError += `${campo}: ${errores[campo].join(", ")}\n`;
+                } else {
+                    mensajeError += `${campo}: ${errores[campo]}\n`;
+                }
+            }
+
+            Swal.fire("Error", mensajeError || "Ocurrió un error al guardar.", "error");
+        } else {
+            Swal.fire(
+                "Error",
+                "Ocurrió un error al guardar. Por favor, inténtalo de nuevo.",
+                "error"
+            );
+        }
+    }
+};
 
   const handleEditPosicion = (posicion) => {
     setEditablePosicion(posicion);
@@ -97,47 +157,79 @@ const DeporteDetalles = ({ id }) => {
   };
 
   const handleSavePosicion = async () => {
-    if (editablePosicion.id === undefined) {
-      editablePosicion.deporte = deporte.deporte.id;
-      try {
-        const res = await peticion(
-          apiClient,
-          `/posicion/api/`,
-          "post",
-          editablePosicion
+    // Validar que el nombre de la posición no esté vacío
+    if (!editablePosicion?.nombre) {
+        Swal.fire(
+            "Campos incompletos",
+            "Por favor ingresa el nombre de la posición.",
+            "warning"
         );
-        setPosiciones([...posiciones, res.data]);
-        setShowPosicionesModal(false);
-        Swal.fire("Creado", "Posición creada con éxito.", "success");
-      } catch (error) {
-        console.error("Error al crear la posición:", error);
-        Swal.fire("Error", "Ocurrió un error al crear la posición.", "error");
-      }
-      return;
+        return;
     }
+
+    // Validar que el nombre solo contenga letras y espacios
+    if (!/^[a-zA-Z\s]+$/.test(editablePosicion.nombre)) {
+        Swal.fire(
+            "Nombre inválido",
+            "El nombre solo puede contener letras y espacios.",
+            "error"
+        );
+        return;
+    }
+
     try {
-      const res = await peticion(
-        apiClient,
-        `/posicion/api/${editablePosicion.id}/`,
-        "put",
-        editablePosicion
-      );
-      setPosiciones(
-        posiciones.map((pos) =>
-          pos.id === editablePosicion.id ? res.data : pos
-        )
-      );
-      setShowPosicionesModal(false);
-      Swal.fire("Actualizado", "Posición actualizada con éxito.", "success");
+        if (editablePosicion.id === undefined) {
+            editablePosicion.deporte = deporte.deporte.id;
+            const res = await peticion(
+                apiClient,
+                `/posicion/api/`,
+                "post",
+                editablePosicion
+            );
+            setPosiciones([...posiciones, res.data]);
+            setShowPosicionesModal(false);
+            Swal.fire("Creado", "Posición creada con éxito.", "success");
+        } else {
+            const res = await peticion(
+                apiClient,
+                `/posicion/api/${editablePosicion.id}/`,
+                "put",
+                editablePosicion
+            );
+            setPosiciones(
+                posiciones.map((pos) =>
+                    pos.id === editablePosicion.id ? res.data : pos
+                )
+            );
+            setShowPosicionesModal(false);
+            Swal.fire("Actualizado", "Posición actualizada con éxito.", "success");
+        }
     } catch (error) {
-      console.error("Error al actualizar la posición:", error);
-      Swal.fire(
-        "Error",
-        "Ocurrió un error al actualizar la posición.",
-        "error"
-      );
+        console.error("Error al guardar la posición:", error);
+
+        if (error.response && error.response.data) {
+            const errores = error.response.data;
+            let mensajeError = "";
+
+            for (const campo in errores) {
+                if (Array.isArray(errores[campo])) {
+                    mensajeError += `${campo}: ${errores[campo].join(", ")}\n`;
+                } else {
+                    mensajeError += `${campo}: ${errores[campo]}\n`;
+                }
+            }
+
+            Swal.fire("Error", mensajeError || "Ocurrió un error al guardar.", "error");
+        } else {
+            Swal.fire(
+                "Error",
+                "Ocurrió un error al guardar. Por favor, inténtalo de nuevo.",
+                "error"
+            );
+        }
     }
-  };
+};
+
   const handleDeletePosicion = async (id) => {
     Swal.fire({
       title: "¿Estás seguro?",
