@@ -10,6 +10,9 @@ import DeporteDetalles from './Cruds/DeporteDetalles';
 function AdminDashboard() {
   const [activeComponent, setActiveComponent] = useState({ name: null , params: null });
   const renderComponent = () => {
+    if (!activeComponent.name) {
+      return <div className='text-center'><h2>Selecciona una opción del menú</h2></div>;
+    }
     switch(activeComponent.name) {
       case 'Usuarios': return <Usuarios />;
       case 'Deportes': return <Deportes onNavigate={(component, params) => setActiveComponent({ name: component, params })} />;

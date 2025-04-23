@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import apiClient, { peticion } from "../../config/apiClient";
 
+
 const MySwal = withReactContent(Swal);
 
 const Deportes = ({ onNavigate }) => {
@@ -11,6 +12,8 @@ const Deportes = ({ onNavigate }) => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [currentData, setCurrentData] = useState({ deporte: {} });
+  const [invalid, setInvalid] = useState({});
+  const [countErrrors, setCountErrors] = useState(0);
   const navi = useNavigate();
   const prefijo = "/config_deporte/api/";
 
@@ -34,12 +37,9 @@ const Deportes = ({ onNavigate }) => {
     fetchData();
   }, []);
 
-  const handleEdit = (editar) => {
-    setCurrentData({ ...editar });
-    setShowModal(true);
-  };
-
   const handleCreate = () => {
+    setInvalid({});
+    setCountErrors(0);
     setCurrentData({ deporte: {}, max_titulares: "", max_suplentes: "" });
     setShowModal(true);
   };
@@ -71,39 +71,17 @@ const Deportes = ({ onNavigate }) => {
   };
 
   const handleSave = async () => {
-    // Validar que el nombre del deporte no esté vacío
-    if (!currentData.deporte?.nombre) {
+    setCountErrors(0);
+    Object.keys(invalid).forEach((key) => {
+      if(invalid[key] === true) {
+        setCountErrors((prevCount) => prevCount + 1);
+      }
+    });
+    
+    if (countErrrors > 0) {
       MySwal.fire(
-        "Campos incompletos",
-        "Por favor ingresa el nombre del deporte.",
-        "warning"
-      );
-      return;
-    }
-
-    // Validar que el nombre solo contenga letras, números y espacios
-    if (!/^[a-zA-Z0-9\s]+$/.test(currentData.deporte.nombre)) {
-      MySwal.fire(
-        "Nombre inválido",
-        "El nombre solo puede contener letras, números y espacios.",
-        "error"
-      );
-      return;
-    }
-
-    if (currentData.max_titulares < 0) {
-      MySwal.fire(
-        "Valor inválido",
-        "El número máximo de titulares no puede ser negativo.",
-        "error"
-      );
-      return;
-    }
-
-    if (currentData.max_suplentes < 0) {
-      MySwal.fire(
-        "Valor inválido",
-        "El número máximo de suplentes no puede ser negativo.",
+        "Error",
+        "Por favor, corrige los errores antes de guardar.",
         "error"
       );
       return;
@@ -236,28 +214,45 @@ const Deportes = ({ onNavigate }) => {
                     <label>Nombre del Deporte <span className="text-danger">*</span></label>
                     <input
                       type="text"
-                      className="form-control"
+                      className={`form-control ${
+                        invalid.nombre ? "is-invalid" : ""
+                      }`}
                       value={currentData.deporte?.nombre || ""}
-                      onChange={(e) => {
+                      onChange={(e) =>{
                         const value = e.target.value;
-                        if (/^[a-zA-Z\s]*$/.test(value)) {
-                          setCurrentData({
-                            ...currentData,
-                            deporte: {
-                              ...currentData.deporte,
-                              nombre: value,
-                            },
-                          });
-                        } else {
-                          MySwal.fire(
-                            "Nombre inválido",
-                            "El nombre solo puede contener letras y espacios.",
-                            "error"
-                          );
-                        }
+                        setCurrentData({
+                          ...currentData,
+                          deporte: {
+                            ...currentData.deporte,
+                            nombre: e.target.value,
+                          },
+                        });
+                        setTimeout(() => {
+                          if (
+                            /^[a-zA-Z0-9\s]+$/.test(
+                              value
+                            ) ||
+                            value === ""
+                          ) {
+                            setInvalid({ ...invalid, nombre: false });
+                            setCurrentData({
+                              ...currentData,
+                              deporte: {
+                                ...currentData.deporte,
+                                nombre: e.target.value,
+                              },
+                            });
+                          } else {
+                            setInvalid({ ...invalid, nombre: true });
+                          }
+                        }, 1000);
                       }}
-                      required
                     />
+                    {invalid.nombre && (
+                      <div className="text-danger">
+                        El nombre solo puede contener letras y números.
+                      </div>
+                    )}
                   </div>
 
                   {/* Validación del número máximo de titulares */}
@@ -265,25 +260,37 @@ const Deportes = ({ onNavigate }) => {
                     <label>Máx. Titulares <span className="text-danger">*</span></label>
                     <input
                       type="number"
-                      className="form-control"
+                      className={`form-control ${invalid.max_titulares ? "is-invalid" : ""}`}
                       value={currentData.max_titulares || ""}
                       onChange={(e) => {
-                        const value = parseInt(e.target.value, 10);
-                        if (value >= 0) {
-                          setCurrentData({
-                            ...currentData,
-                            max_titulares: value,
-                          });
-                        } else {
-                          MySwal.fire(
-                            "Valor inválido",
-                            "El número máximo de titulares no puede ser negativo.",
-                            "error"
-                          );
-                        }
+                        const value = e.target.value;
+                        setCurrentData({
+                          ...currentData,
+                          max_titulares: e.target.value,
+                        });
+                        setTimeout(() => {
+                          if (
+                            /^[0-9]+$/.test(
+                              value
+                            ) && value < 0 ||
+                            value === ""
+                          ) {
+                            setInvalid({ ...invalid, max_titulares: false });
+                            setCurrentData({
+                              ...currentData,
+                              max_titulares: e.target.value,
+                            });
+                          } else {
+                            setInvalid({ ...invalid, max_titulares: true });
+                          }
+                        }, 1000);
                       }}
-                      required
                     />
+                    {invalid.max_titulares && (
+                      <div className="text-danger">
+                        El número de titulares solo puede contener números positivos.
+                      </div>
+                    )}
                   </div>
 
                   {/* Validación del número máximo de suplentes */}
@@ -291,25 +298,37 @@ const Deportes = ({ onNavigate }) => {
                     <label>Máx. Suplentes <span className="text-danger">*</span></label>
                     <input
                       type="number"
-                      className="form-control"
+                      className={`form-control ${invalid.max_suplentes ? "is-invalid" : ""}`}
                       value={currentData.max_suplentes || ""}
                       onChange={(e) => {
-                        const value = parseInt(e.target.value, 10);
-                        if (value >= 0) {
-                          setCurrentData({
-                            ...currentData,
-                            max_suplentes: value,
-                          });
-                        } else {
-                          MySwal.fire(
-                            "Valor inválido",
-                            "El número máximo de suplentes no puede ser negativo.",
-                            "error"
-                          );
-                        }
+                        const value = e.target.value;
+                        setCurrentData({
+                          ...currentData,
+                          max_suplentes: e.target.value,
+                        });
+                        setTimeout(() => {
+                          if (
+                            /^[0-9]+$/.test(
+                              value
+                            ) && value < 0 ||
+                            value === ""
+                          ) {
+                            setInvalid({ ...invalid, max_suplentes: false });
+                            setCurrentData({
+                              ...currentData,
+                              max_suplentes: e.target.value,
+                            });
+                          } else {
+                            setInvalid({ ...invalid, max_suplentes: true });
+                          }
+                        }, 1000);
                       }}
-                      required
                     />
+                    {invalid.max_suplentes && (
+                      <div className="text-danger">
+                        El número de suplentes solo puede contener números positivos.
+                      </div>
+                    )}
                   </div>
                 </form>
               </div>
