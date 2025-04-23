@@ -25,7 +25,7 @@ const Equipos = ({ onNavigate }) => {
         ]);
 
         setData(equiposRes.data);
-        //setData(equiposRes.data);
+  
         setDeportes(deportesRes.data.map((deporte) => ({
           ...deporte,
           max_titulares: deporte.max_titulares ,
@@ -96,13 +96,47 @@ const Equipos = ({ onNavigate }) => {
   };
 
   const handleSave = () => {
+    // Validar que todos los campos obligatorios estén completos
     if (!currentData.nombre || !currentData.deporte) {
-      Swal.fire(
-        "Campos incompletos",
-        "Por favor completa nombre y deporte.",
-        "warning"
-      );
-      return;
+        Swal.fire(
+            "Campos incompletos",
+            "Por favor completa los campos obligatorios: Nombre y Deporte.",
+            "warning"
+        );
+        return;
+    }
+
+    // Validar que el nombre solo contenga letras, números y espacios
+    if (!/^[a-zA-Z0-9\s]+$/.test(currentData.nombre)) {
+        Swal.fire(
+            "Nombre inválido",
+            "El nombre solo puede contener letras, números y espacios.",
+            "error"
+        );
+        return;
+    }
+
+    // Validar que la descripción solo contenga letras, números, espacios, puntos y comas
+    if (
+        currentData.descripcion &&
+        !/^[a-zA-Z0-9\s.,]+$/.test(currentData.descripcion)
+    ) {
+        Swal.fire(
+            "Descripción inválida",
+            "La descripción solo puede contener letras, números, espacios, puntos y comas.",
+            "error"
+        );
+        return;
+    }
+
+    // Validar que la ciudad solo contenga letras y espacios
+    if (currentData.ciudad && !/^[a-zA-Z\s]+$/.test(currentData.ciudad)) {
+        Swal.fire(
+            "Ciudad inválida",
+            "La ciudad solo puede contener letras y espacios.",
+            "error"
+        );
+        return;
     }
 
     const formData = new FormData();
@@ -115,48 +149,82 @@ const Equipos = ({ onNavigate }) => {
     formData.append("num_suplentes", currentData.num_suplentes || 0);
 
     if (logoFile) {
-      formData.append("logo", logoFile);
+        formData.append("logo", logoFile);
     }
 
     // Solo enviar el campo "activo" si estás editando un equipo
     if (currentData.id) {
-      formData.append("activo", currentData.activo);
+        formData.append("activo", currentData.activo);
     }
 
     const headers = { "Content-Type": "multipart/form-data" };
 
     if (currentData.id) {
-      peticion(apiClient, `${prefijo}${currentData.id}/`, "put", formData, headers)
-        .then((res) => {
-          setData(
-            data.map((equipo) =>
-              equipo.id === currentData.id ? res.data : equipo
-            )
-          );
-          setShowModal(false);
-          Swal.fire("Actualizado", "Equipo actualizado con éxito.", "success");
-        })
-        .catch((error) => {
-          console.error("Error al actualizar el equipo:", error);
-          Swal.fire(
-            "Error",
-            "Ocurrió un error al actualizar el equipo.",
-            "error"
-          );
-        });
+        peticion(apiClient, `${prefijo}${currentData.id}/`, "put", formData, headers)
+            .then((res) => {
+                setData(
+                    data.map((equipo) =>
+                        equipo.id === currentData.id ? res.data : equipo
+                    )
+                );
+                setShowModal(false);
+                Swal.fire("Actualizado", "Equipo actualizado con éxito.", "success");
+            })
+            .catch((error) => {
+                console.error("Error al actualizar el equipo:", error);
+                if (error.response && error.response.data) {
+                    const errores = error.response.data;
+                    let mensajeError = "";
+
+                    for (const campo in errores) {
+                        if (Array.isArray(errores[campo])) {
+                            mensajeError += `${campo}: ${errores[campo].join(", ")}\n`;
+                        } else {
+                            mensajeError += `${campo}: ${errores[campo]}\n`;
+                        }
+                    }
+
+                    Swal.fire("Error", mensajeError || "No se pudo actualizar el equipo.", "error");
+                } else {
+                    Swal.fire(
+                        "Error",
+                        "Ocurrió un error al actualizar el equipo.",
+                        "error"
+                    );
+                }
+            });
     } else {
-      peticion(apiClient, prefijo, "post", formData, headers)
-        .then((res) => {
-          setData([...data, res.data]);
-          setShowModal(false);
-          Swal.fire("Creado", "Equipo creado con éxito.", "success");
-        })
-        .catch((error) => {
-          console.error("Error al crear el equipo:", error);
-          Swal.fire("Error", "Ocurrió un error al crear el equipo.", "error");
-        });
+        peticion(apiClient, prefijo, "post", formData, headers)
+            .then((res) => {
+                setData([...data, res.data]);
+                setShowModal(false);
+                Swal.fire("Creado", "Equipo creado con éxito.", "success");
+            })
+            .catch((error) => {
+                console.error("Error al crear el equipo:", error);
+                if (error.response && error.response.data) {
+                    const errores = error.response.data;
+                    let mensajeError = "";
+
+                    for (const campo in errores) {
+                        if (Array.isArray(errores[campo])) {
+                            mensajeError += `${campo}: ${errores[campo].join(", ")}\n`;
+                        } else {
+                            mensajeError += `${campo}: ${errores[campo]}\n`;
+                        }
+                    }
+
+                    Swal.fire("Error", mensajeError || "No se pudo crear el equipo.", "error");
+                } else {
+                    Swal.fire(
+                        "Error",
+                        "Ocurrió un error al crear el equipo.",
+                        "error"
+                    );
+                }
+            });
     }
-  };
+};
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

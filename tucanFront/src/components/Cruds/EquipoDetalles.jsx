@@ -199,7 +199,6 @@ const EquipoDetalle = ({ id }) => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
-    // Si el campo modificado es "deporte", actualizamos los titulares y suplentes automáticamente
     if (name === "deporte") {
       const selectedDeporte = deportes.find((deporte) => deporte.id === parseInt(value));
       if (selectedDeporte) {
@@ -216,72 +215,145 @@ const EquipoDetalle = ({ id }) => {
       setEditableEquipo({ ...editableEquipo, [name]: value });
     }
   };
+
   const handleSave = async () => {
+
     if (!editableEquipo.nombre || !editableEquipo.deporte) {
-      Swal.fire(
-        "Campos incompletos",
-        "Por favor completa nombre y deporte.",
-        "warning"
-      );
-      return;
+        Swal.fire(
+            "Campos incompletos",
+            "Por favor completa los campos obligatorios: Nombre y Deporte.",
+            "warning"
+        );
+        return;
+    }
+
+  
+    if (!/^[a-zA-Z0-9\s]+$/.test(editableEquipo.nombre)) {
+        Swal.fire(
+            "Nombre inválido",
+            "El nombre solo puede contener letras, números y espacios.",
+            "error"
+        );
+        return;
+    }
+
+    if (
+        editableEquipo.descripcion &&
+        !/^[a-zA-Z0-9\s.,]+$/.test(editableEquipo.descripcion)
+    ) {
+        Swal.fire(
+            "Descripción inválida",
+            "La descripción solo puede contener letras, números, espacios, puntos y comas.",
+            "error"
+        );
+        return;
+    }
+
+
+    if (editableEquipo.ciudad && !/^[a-zA-Z\s]+$/.test(editableEquipo.ciudad)) {
+        Swal.fire(
+            "Ciudad inválida",
+            "La ciudad solo puede contener letras y espacios.",
+            "error"
+        );
+        return;
     }
 
     try {
-      const formData = new FormData();
-      formData.append("nombre", editableEquipo.nombre);
-      formData.append("descripcion", editableEquipo.descripcion || "");
-      formData.append("ciudad", editableEquipo.ciudad || "");
-      formData.append("deporte", editableEquipo.deporte);
-      formData.append("entrenador", currentUserId);
-      formData.append("num_titulares", editableEquipo.num_titulares || 0);
-      formData.append("num_suplentes", editableEquipo.num_suplentes || 0);
+        const formData = new FormData();
+        formData.append("nombre", editableEquipo.nombre);
+        formData.append("descripcion", editableEquipo.descripcion || "");
+        formData.append("ciudad", editableEquipo.ciudad || "");
+        formData.append("deporte", editableEquipo.deporte);
+        formData.append("entrenador", currentUserId);
+        formData.append("num_titulares", editableEquipo.num_titulares || 0);
+        formData.append("num_suplentes", editableEquipo.num_suplentes || 0);
 
-      if (logoFile) {
-        formData.append("logo", logoFile);
-      }
+        if (logoFile) {
+            formData.append("logo", logoFile);
+        }
 
-      const headers = { "Content-Type": "multipart/form-data" };
+        const headers = { "Content-Type": "multipart/form-data" };
 
-      if (editableEquipo.id) {
-        const res = await peticion(
-          apiClient,
-          `/equipos/api/${editableEquipo.id}/`,
-          "put",
-          formData,
-          headers
-        );
+        if (editableEquipo.id) {
 
-        const equipoActualizado = { ...res.data };
-        const deporte = deportes.find(
-          (d) => Number(d.id) === Number(equipoActualizado.deporte)
-        );
-        equipoActualizado.deporte_nombre = deporte
-          ? deporte.nombre
-          : "Desconocido";
+            const res = await peticion(
+                apiClient,
+                `/equipos/api/${editableEquipo.id}/`,
+                "put",
+                formData,
+                headers
+            );
 
-        setEquipo(equipoActualizado);
-        actualizarEventos(equipoActualizado);
-        setShowModal(false);
-        Swal.fire("Actualizado", "Equipo actualizado con éxito.", "success");
-      }
+            const equipoActualizado = { ...res.data };
+            const deporte = deportes.find(
+                (d) => Number(d.id) === Number(equipoActualizado.deporte)
+            );
+            equipoActualizado.deporte_nombre = deporte
+                ? deporte.nombre
+                : "Desconocido";
+
+            setEquipo(equipoActualizado);
+            actualizarEventos(equipoActualizado);
+            setShowModal(false);
+            Swal.fire("Éxito", "Equipo actualizado con éxito.", "success");
+        } else {
+
+            const res = await peticion(
+                apiClient,
+                "/equipos/api/",
+                "post",
+                formData,
+                headers
+            );
+
+            const equipoCreado = { ...res.data };
+            const deporte = deportes.find(
+                (d) => Number(d.id) === Number(equipoCreado.deporte)
+            );
+            equipoCreado.deporte_nombre = deporte
+                ? deporte.nombre
+                : "Desconocido";
+
+            setEquipo(equipoCreado);
+            setShowModal(false);
+            Swal.fire("Éxito", "Equipo creado con éxito.", "success");
+        }
     } catch (error) {
-      console.error("Error al guardar el equipo:", error);
-      Swal.fire(
-        "Error",
-        "Ocurrió un error al guardar el equipo. Por favor, inténtalo de nuevo.",
-        "error"
-      );
+        console.error("Error al guardar el equipo:", error);
+
+        if (error.response && error.response.data) {
+
+            const errores = error.response.data;
+            let mensajeError = "";
+
+            for (const campo in errores) {
+                if (Array.isArray(errores[campo])) {
+                    mensajeError += `${campo}: ${errores[campo].join(", ")}\n`;
+                } else {
+                    mensajeError += `${campo}: ${errores[campo]}\n`;
+                }
+            }
+
+            Swal.fire("Error", mensajeError || "No se pudo guardar el equipo.", "error");
+        } else {
+            Swal.fire(
+                "Error",
+                "Ocurrió un error al guardar el equipo. Por favor, inténtalo de nuevo.",
+                "error"
+            );
+        }
     }
-  };
+};
 
   const handleSaveJugador = async () => {
-    // Validar que todos los campos estén completos
+
     if (!nuevoJugador.nombre || !nuevoJugador.fecha_nacimiento || !nuevoJugador.posicion) {
       Swal.fire("Error", "Por favor completa todos los campos", "error");
       return;
     }
 
-    // Validar que el nombre solo contenga letras y espacios
+
     if (!/^[a-zA-Z\s]+$/.test(nuevoJugador.nombre)) {
       Swal.fire(
         "Nombre inválido",
@@ -291,7 +363,7 @@ const EquipoDetalle = ({ id }) => {
       return;
     }
 
-    // Validar que la fecha de nacimiento no sea en el futuro
+
     const fechaNacimiento = new Date(nuevoJugador.fecha_nacimiento);
     if (fechaNacimiento > new Date()) {
       Swal.fire(
@@ -302,7 +374,7 @@ const EquipoDetalle = ({ id }) => {
       return;
     }
 
-    // Validar que el jugador tenga al menos 15 años
+
     const edadMinima = 15;
     const fechaLimite = new Date();
     fechaLimite.setFullYear(fechaLimite.getFullYear() - edadMinima);
@@ -315,7 +387,7 @@ const EquipoDetalle = ({ id }) => {
       return;
     }
 
-    // Validar que la posición corresponda al deporte del equipo
+
     const posicionSeleccionada = posiciones.find(
       (posicion) => posicion.id === Number(nuevoJugador.posicion)
     );
@@ -328,7 +400,6 @@ const EquipoDetalle = ({ id }) => {
       return;
     }
 
-    // Validar el límite de titulares y suplentes
     const titularesActuales = jugadores.filter((jugador) => jugador.es_titular).length;
     const suplentesActuales = jugadores.filter((jugador) => !jugador.es_titular).length;
 
@@ -365,7 +436,7 @@ const EquipoDetalle = ({ id }) => {
       };
 
       if (nuevoJugador.id) {
-        // Actualizar jugador existente
+
         const res = await peticion(apiClient, `/jugadores/api/${nuevoJugador.id}/`, "put", jugadorData);
         setJugadores(
           jugadores.map((jugador) =>
@@ -376,7 +447,7 @@ const EquipoDetalle = ({ id }) => {
         );
         Swal.fire("Éxito", "Jugador actualizado correctamente", "success");
       } else {
-        // Crear nuevo jugador
+ 
         const res = await peticion(apiClient, "/jugadores/api/", "post", jugadorData);
         setJugadores([
           ...jugadores,
@@ -385,7 +456,7 @@ const EquipoDetalle = ({ id }) => {
         Swal.fire("Éxito", "Jugador agregado correctamente", "success");
       }
 
-      // Reiniciar el formulario
+
       setNuevoJugador({ id: null, nombre: "", fecha_nacimiento: "", posicion: "", es_titular: false });
     } catch (error) {
       console.error("Error al guardar el jugador:", error);
@@ -394,7 +465,6 @@ const EquipoDetalle = ({ id }) => {
     setEditarJugador(false);
   };
 
-  /// Editar un jugador existente
   const handleEditJugador = (jugador) => {
     setNuevoJugador({
       id: jugador.id,
