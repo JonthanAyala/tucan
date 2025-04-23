@@ -401,12 +401,13 @@ const DeporteDetalles = ({ id }) => {
                       max={99}
                       value={editableDeporte.max_titulares || ""}
                       onChange={(e) => {
-                        const value = parseInt(e.target.value, 10);
+                        const value = e.target.value;
                         setEditableDeporte({
                           ...editableDeporte,
                           max_titulares: value,
                         });
                         setTimeout(() => {
+                          const numericValue = Number(value);
                           if ((/^[0-9]+$/.test(value) && numericValue >= 0) || value === "") {
                             setInvalid({ ...invalid, max_titulares: false });
                           }
@@ -417,6 +418,11 @@ const DeporteDetalles = ({ id }) => {
                       }}
                       required
                     />
+                    {invalid.max_titulares && (
+                      <div className="invalid-feedback">
+                        El número máximo de titulares no puede ser negativo.
+                        </div>
+                    )}
                   </div>
                   <div className="form-group mb-3">
                     <label>Máx. Suplentes <span className="text-danger">*</span></label>
@@ -429,12 +435,13 @@ const DeporteDetalles = ({ id }) => {
                       max={99}
                       value={editableDeporte.max_suplentes || ""}
                       onChange={(e) => {
-                        const value = parseInt(e.target.value, 10);
+                        const value = e.target.value;
                         setEditableDeporte({
                           ...editableDeporte,
-                          max_suplentes: value,
+                          max_suplentes: e.target.value,
                         });
                         setTimeout(() => {
+                          const numericValue = Number(value);
                           if ((/^[0-9]+$/.test(value) && numericValue >= 0) || value === "") {
                             setInvalid({ ...invalid, max_suplentes: false });
                           }
