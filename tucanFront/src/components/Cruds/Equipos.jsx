@@ -373,7 +373,7 @@ const Equipos = ({ onNavigate }) => {
                       value={currentData.nombre || ""}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (/^[a-zA-ZÀ-ÿñÑ\s]*$/.test(value) || value === "") {
+                        if (/^[a-zA-Z0-9À-ÿñÑ\s]*$/.test(value) || value === "") {
                           setInvalid({ ...invalid, nombre: false }); 
                           handleInputChange(e);
                         } else {
@@ -418,7 +418,7 @@ const Equipos = ({ onNavigate }) => {
                       value={currentData.descripcion || ""}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (/^[a-zA-ZÀ-ÿñÑ\s]*$/.test(value) || value === "") {
+                        if (/^[a-zA-Z0-9À-ÿñÑ\s]*$/.test(value) || value === "") {
                           setInvalid({ ...invalid, descripcion: false });
                           handleInputChange(e);
                         } else {

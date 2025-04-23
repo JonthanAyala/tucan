@@ -756,7 +756,7 @@ const EquipoDetalle = ({ id }) => {
                             value={editableEquipo.nombre || ""}
                             onChange={(e) => {
                               const value = e.target.value;
-                              if (/^[a-zA-ZÀ-ÿñÑ\s]*$/.test(value) || value === "") {
+                              if (/^[a-zA-Z0-9À-ÿñÑ\s]*$/.test(value) || value === "") {
                                 setInvalid({ ...invalid, nombre: false });
                                 handleInputChange(e);
                               } else {
@@ -800,7 +800,7 @@ const EquipoDetalle = ({ id }) => {
                             value={editableEquipo.descripcion || ""}
                             onChange={(e) => {
                               const value = e.target.value;
-                              if (/^[a-zA-ZÀ-ÿñÑ\s.,]*$/.test(value) || value === "") {
+                              if (/^[a-zA-Z0-9À-ÿñÑ\s.,]*$/.test(value) || value === "") {
                                 setInvalid({ ...invalid, descripcion: false });
                                 handleInputChange(e);
                               } else {
@@ -926,7 +926,12 @@ const EquipoDetalle = ({ id }) => {
                     </div>
                     <div className="modal-body">
                       <div className="mb-3 d-flex">
-                        <form className="row g-3">
+                        <form className="row g-3"
+                          onSubmit={(e) => {
+                            e.preventDefault(); // Evita la recarga de la página
+                            handleSaveJugador(); // Llama a la función para guardar o actualizar el jugador
+                          }}
+                        >
                           <div className="col-md-6">
                             <label className="form-label">Nombre <span className="text-danger">*</span></label>
                             <input
@@ -1030,8 +1035,8 @@ const EquipoDetalle = ({ id }) => {
                               </label>
                             </div>
                             <button
+                              type="submit" // Cambiado a "submit" para que funcione con el evento onSubmit del formulario
                               className="btn btn-success ms-5"
-                              onClick={handleSaveJugador}
                             >
                               {editarJugador ? "Actualizar" : "Agregar"}
                             </button>
