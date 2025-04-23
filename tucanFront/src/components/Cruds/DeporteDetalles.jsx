@@ -9,6 +9,8 @@ const DeporteDetalles = ({ id }) => {
   const [showModal, setShowModal] = useState(false);
   const [showPosicionesModal, setShowPosicionesModal] = useState(false);
   const [editablePosicion, setEditablePosicion] = useState(null);
+  const [invalid, setInvalid] = useState({});
+  const [invalidPosicion, setInvalidPosicion] = useState({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -75,41 +77,11 @@ const DeporteDetalles = ({ id }) => {
   };
 
   const handleSaveDeporte = async () => {
-    // Validar que el nombre del deporte no esté vacío
-    if (!editableDeporte.deporte?.nombre) {
+    const errorCount = Object.values(invalid).filter((value) => value === true).length;
+    if (errorCount > 0) {
       Swal.fire(
-        "Campos incompletos",
-        "Por favor ingresa el nombre del deporte.",
-        "warning"
-      );
-      return;
-    }
-
-    // Validar que el nombre solo contenga letras, números y espacios
-    if (!/^[a-zA-Z0-9\s]+$/.test(editableDeporte.deporte.nombre)) {
-      Swal.fire(
-        "Nombre inválido",
-        "El nombre solo puede contener letras, números y espacios.",
-        "error"
-      );
-      return;
-    }
-
-    // Validar que el número máximo de titulares no sea negativo
-    if (editableDeporte.max_titulares < 0) {
-      Swal.fire(
-        "Valor inválido",
-        "El número máximo de titulares no puede ser negativo.",
-        "error"
-      );
-      return;
-    }
-
-    // Validar que el número máximo de suplentes no sea negativo
-    if (editableDeporte.max_suplentes < 0) {
-      Swal.fire(
-        "Valor inválido",
-        "El número máximo de suplentes no puede ser negativo.",
+        "Error",
+        "Por favor, corrige los errores antes de guardar.",
         "error"
       );
       return;
@@ -157,21 +129,12 @@ const DeporteDetalles = ({ id }) => {
   };
 
   const handleSavePosicion = async () => {
-    // Validar que el nombre de la posición no esté vacío
-    if (!editablePosicion?.nombre) {
-      Swal.fire(
-        "Campos incompletos",
-        "Por favor ingresa el nombre de la posición.",
-        "warning"
-      );
-      return;
-    }
+    const errorCount = Object.values(invalidPosicion).filter((value) => value === true).length;
 
-    // Validar que el nombre solo contenga letras y espacios
-    if (!/^[a-zA-Z\s]+$/.test(editablePosicion.nombre)) {
+    if (errorCount > 0) {
       Swal.fire(
-        "Nombre inválido",
-        "El nombre solo puede contener letras y espacios.",
+        "Error",
+        "Por favor, corrige los errores antes de guardar.",
         "error"
       );
       return;
@@ -388,49 +351,66 @@ const DeporteDetalles = ({ id }) => {
                     <label>Nombre del Deporte <span className="text-danger">*</span></label>
                     <input
                       type="text"
-                      className="form-control"
+                      className={`form-control ${
+                        invalid.nombre ? "is-invalid" : ""
+                      }`}
+                      autoFocus
+                      maxLength={45}
                       value={editableDeporte.deporte?.nombre || ""}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (/^[a-zA-Z\s]*$/.test(value)) {
-                          setEditableDeporte({
-                            ...editableDeporte,
-                            deporte: {
-                              ...editableDeporte.deporte,
-                              nombre: value,
-                            },
-                          });
-                        } else {
-                          Swal.fire(
-                            "Nombre inválido",
-                            "El nombre solo puede contener letras y espacios.",
-                            "error"
-                          );
-                        }
+                        setEditableDeporte({
+                          ...editableDeporte,
+                          deporte: {
+                            ...editableDeporte.deporte,
+                            nombre: value,
+                          },
+                        });
+                        setTimeout(() => {
+                          if (
+                            /^[a-zA-Z0-9\s]+$/.test(
+                              value
+                            ) ||
+                            value === ""
+                          ) {
+                            setInvalid({ ...invalid, nombre: false });
+                          } else {
+                            setInvalid({ ...invalid, nombre: true });
+                          }
+                        }, 1000);
                       }}
                       required
                     />
+                    {invalid.nombre && (
+                      <div className="invalid-feedback">
+                        El nombre solo puede contener letras y números.
+                        </div>
+                    )}
                   </div>
                   <div className="form-group mb-3">
                     <label>Máx. Titulares <span className="text-danger">*</span></label>
                     <input
                       type="number"
-                      className="form-control"
+                      className={`form-control ${
+                        invalid.max_titulares ? "is-invalid" : ""
+                      }`}
+                      min={0}
+                      max={99}
                       value={editableDeporte.max_titulares || ""}
                       onChange={(e) => {
                         const value = parseInt(e.target.value, 10);
-                        if (value >= 0) {
-                          setEditableDeporte({
-                            ...editableDeporte,
-                            max_titulares: value,
-                          });
-                        } else {
-                          Swal.fire(
-                            "Valor inválido",
-                            "El número máximo de titulares no puede ser negativo.",
-                            "error"
-                          );
-                        }
+                        setEditableDeporte({
+                          ...editableDeporte,
+                          max_titulares: value,
+                        });
+                        setTimeout(() => {
+                          if ((/^[0-9]+$/.test(value) && numericValue >= 0) || value === "") {
+                            setInvalid({ ...invalid, max_titulares: false });
+                          }
+                          else {
+                            setInvalid({ ...invalid, max_titulares: true });
+                          }
+                        }, 1000);
                       }}
                       required
                     />
@@ -439,25 +419,34 @@ const DeporteDetalles = ({ id }) => {
                     <label>Máx. Suplentes <span className="text-danger">*</span></label>
                     <input
                       type="number"
-                      className="form-control"
+                      className={`form-control ${
+                        invalid.max_suplentes ? "is-invalid" : ""
+                      }`}
+                      min={0}
+                      max={99}
                       value={editableDeporte.max_suplentes || ""}
                       onChange={(e) => {
                         const value = parseInt(e.target.value, 10);
-                        if (value >= 0) {
-                          setEditableDeporte({
-                            ...editableDeporte,
-                            max_suplentes: value,
-                          });
-                        } else {
-                          Swal.fire(
-                            "Valor inválido",
-                            "El número máximo de suplentes no puede ser negativo.",
-                            "error"
-                          );
-                        }
+                        setEditableDeporte({
+                          ...editableDeporte,
+                          max_suplentes: value,
+                        });
+                        setTimeout(() => {
+                          if ((/^[0-9]+$/.test(value) && numericValue >= 0) || value === "") {
+                            setInvalid({ ...invalid, max_suplentes: false });
+                          }
+                          else {
+                            setInvalid({ ...invalid, max_suplentes: true });
+                          }
+                        }, 1000);
                       }}
                       required
                     />
+                    {invalid.max_suplentes && (
+                      <div className="invalid-feedback">
+                        El número máximo de suplentes no puede ser negativo.
+                      </div>
+                    )}
                   </div>
                 </form>
               </div>
@@ -510,25 +499,37 @@ const DeporteDetalles = ({ id }) => {
                     <label>Nombre de la Posición <span className="text-danger">*</span></label>
                     <input
                       type="text"
-                      className="form-control"
+                      className={`form-control ${
+                        invalidPosicion.nombre ? "is-invalid" : ""
+                      }`}
+                      autoFocus
+                      maxLength={45}
                       value={editablePosicion?.nombre || ""}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (/^[a-zA-Z\s]*$/.test(value)) {
-                          setEditablePosicion({
-                            ...editablePosicion,
-                            nombre: value,
-                          });
-                        } else {
-                          Swal.fire(
-                            "Nombre inválido",
-                            "El nombre solo puede contener letras y espacios.",
-                            "error"
-                          );
-                        }
+                        setEditablePosicion({
+                          ...editablePosicion,
+                          nombre: value,
+                        });
+                        setTimeout(() => {
+                          if (
+                            /^[a-zA-Z0-9\s]+$/.test(value) ||
+                            value === ""
+                          ) {
+                            setInvalidPosicion({ ...invalidPosicion, nombre: false });
+                          }
+                          else {
+                            setInvalidPosicion({ ...invalidPosicion, nombre: true });
+                          }
+                        },1000);
                       }}
                       required
                     />
+                    {invalidPosicion.nombre && (
+                      <div className="invalid-feedback">
+                        El nombre solo puede contener letras y números.
+                      </div>
+                    )}
                   </div>
                 </form>
               </div>

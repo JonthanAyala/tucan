@@ -458,7 +458,7 @@ const EquipoDetalle = ({ id }) => {
     return (
       <div className="text-center mt-4 text-muted">
       <i className="bi bi-exclamation-circle fs-1 d-block mb-2"></i>
-      <h5>Por favor selecciona un equipo para ver sus detelles</h5>
+      <h5>Por favor selecciona un equipo para ver sus detalles</h5>
     </div>
     );
   }
