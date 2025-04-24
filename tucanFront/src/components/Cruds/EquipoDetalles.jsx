@@ -62,7 +62,8 @@ const EquipoDetalle = ({ id }) => {
           apiClient,
           `jugadores/jugadores/${id}/`
         );
-        console.log(resJugadores.data.jugadores);
+
+        // console.log(resJugadores.data.jugadores);
         setJugadores(resJugadores.data.jugadores || []);
 
 
@@ -561,7 +562,7 @@ const EquipoDetalle = ({ id }) => {
                                 {jugador.nombre}
                               </strong>
                               <small className="text-muted text-truncate d-block">
-                                {jugador.posicion_nombre}
+                              {posiciones.find(posicion => posicion.id === jugador.posicion)?.nombre || "Posición no encontrada"}
                               </small>
                             </div>
                             <span className="badge bg-primary rounded-pill ms-2">
@@ -1063,7 +1064,7 @@ const EquipoDetalle = ({ id }) => {
                               <td>{jugador.nombre}</td>
                               <td>{jugador.fecha_nacimiento}</td>
                               <td>{jugador.edad}</td>
-                              <td>{jugador.posicion}</td>
+                              <td>{posiciones.find(posicion => posicion.id === jugador.posicion)?.nombre || "Posición no encontrada"}</td>
                               <td>{jugador.es_titular ? "Sí" : "No"}</td>
                               <td>
                                 <button
